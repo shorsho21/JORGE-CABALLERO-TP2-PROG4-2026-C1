@@ -1,0 +1,74 @@
+:host {
+  display: block;
+}
+
+/* Fondo general */
+.container-fluid {
+  background: radial-gradient(circle at top, #1a1a1a, #0f0f0f);
+}
+
+/* Navbar */
+h4 {
+  letter-spacing: 0.5px;
+}
+
+/* Links navbar */
+a {
+  opacity: 0.8;
+  transition: 0.2s;
+}
+
+a:hover {
+  opacity: 1;
+}
+
+/* Cards de posts */
+.post-card {
+  background: #161616;
+  border: 1px solid rgba(255,255,255,0.05);
+  color: white;
+  border-radius: 14px;
+  transition: 0.2s ease;
+}
+
+.post-card:hover {
+  transform: translateY(-2px);
+}
+
+/* Inputs */
+.form-control {
+  background: #0f0f0f;
+  border: 1px solid rgba(255,255,255,0.08);
+  color: white;
+  border-radius: 10px;
+}
+
+.form-control:focus {
+  background: #0f0f0f;
+  color: white;
+  border-color: #444;
+  box-shadow: none;
+}
+
+/* Botones outline claros */
+.btn-outline-light {
+  border-radius: 10px;
+  border-color: rgba(255,255,255,0.2);
+}
+
+.btn-outline-light:hover {
+  background: white;
+  color: black;
+}
+
+/* Botón publicar */
+.btn-dark {
+  border-radius: 10px;
+  background: #fff;
+  color: #000;
+  border: none;
+}
+
+.btn-dark:hover {
+  background: #e5e5e5;
+}

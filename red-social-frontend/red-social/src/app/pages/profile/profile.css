@@ -1,0 +1,72 @@
+:host {
+  display: block;
+}
+
+/* Fondo */
+.container-fluid {
+  background: radial-gradient(circle at top, #1a1a1a, #0f0f0f);
+}
+
+/* Navbar links */
+a {
+  opacity: 0.8;
+  transition: 0.2s;
+}
+
+a:hover {
+  opacity: 1;
+}
+
+/* Cards generales */
+.profile-card,
+.stat-card {
+  background: #161616;
+  border: 1px solid rgba(255,255,255,0.05);
+  color: white;
+  border-radius: 14px;
+}
+
+/* Avatar */
+.profile-avatar {
+  width: 90px;
+  height: 90px;
+  border-radius: 50%;
+  border: 2px solid rgba(255,255,255,0.1);
+  object-fit: cover;
+}
+
+/* Bio */
+.bio {
+  max-width: 400px;
+  font-size: 0.95rem;
+}
+
+/* Botón editar */
+.btn-edit {
+  background: #fff;
+  color: #000;
+  border-radius: 10px;
+  padding: 6px 14px;
+  border: none;
+  transition: 0.2s;
+}
+
+.btn-edit:hover {
+  background: #e5e5e5;
+}
+
+/* Stats */
+.stat-card h5 {
+  margin-bottom: 4px;
+}
+
+.stat-card {
+  transition: 0.2s;
+}
+
+.stat-card:hover {
+  transform: translateY(-2px);
+}
+.text-muted {
+  color: #cfcfcf !important;
+}
