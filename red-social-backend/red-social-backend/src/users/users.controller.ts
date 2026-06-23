@@ -14,7 +14,7 @@ import { CreateUserDto } from './dto/create-user.dto';
 export class UsersController {
   constructor(private readonly usersService: UsersService) {}
 
-  // 🧾 REGISTER CON IMAGEN
+  //  post endpoint para crear un usuario. Recibe un DTO con los datos del usuario y una imagen
   @Post()
   @UseInterceptors(FileInterceptor('file'))
   create(

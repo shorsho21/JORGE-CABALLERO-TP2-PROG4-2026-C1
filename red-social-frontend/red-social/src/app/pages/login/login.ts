@@ -10,15 +10,17 @@ import { AuthService } from '../../services/auth.service';
   templateUrl: './login.html',
   styleUrl: './login.css',
 })
+//inicio la clase
 export class Login {
+  //inyecto los servicios necesarios
   private fb = inject(FormBuilder);
   private router = inject(Router);
   private authService = inject(AuthService);
-
+  //inicio las variables para el modal
   showModal = false;
   modalMessage = '';
   modalType: 'success' | 'error' = 'success';
-
+  //inicio el formulario reactivo:
   form: FormGroup = this.fb.group({
     email: ['', [Validators.required, Validators.email]],
     password: ['', [Validators.required, Validators.minLength(6)]],
@@ -33,7 +35,7 @@ export class Login {
   closeModal() {
     this.showModal = false;
   }
-
+  //si form es invalido, muestra un modal de error, si no, llama al service login
   login() {
     if (this.form.invalid) {
       this.openModal('Completa los campos correctamente', 'error');
