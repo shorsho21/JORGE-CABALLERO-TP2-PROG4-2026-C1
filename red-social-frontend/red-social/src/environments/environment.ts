@@ -1,4 +1,4 @@
 export const environment = {
-  production: false,
-  apiUrl: 'http://localhost:3000'
+  production: true,
+  apiUrl: 'https://jorge-caballero-tp2-prog4-2026-c1-1.onrender.com'
 };
