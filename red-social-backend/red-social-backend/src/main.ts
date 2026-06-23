@@ -7,7 +7,7 @@ async function bootstrap() {
   app.enableCors({
     origin: [
       'http://localhost:4200',
-      'https://jorge-caballero-tp2-prog4-2026-c1-1.onrender.com', // reemplazás cuando tengas la URL
+      'https://tu-app.vercel.app', // ← reemplazá por tu URL real de Vercel
     ],
     credentials: true,
   });
