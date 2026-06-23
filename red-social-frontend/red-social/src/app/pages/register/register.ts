@@ -67,7 +67,7 @@ export class Register {
     });
 
     if (this.selectedFile) {
-      formData.append('imagen', this.selectedFile);
+      formData.append('file', this.selectedFile);
     }
 
     this.authService.register(formData).subscribe({
