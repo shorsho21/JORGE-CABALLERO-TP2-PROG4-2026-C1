@@ -7,7 +7,8 @@ async function bootstrap() {
   app.enableCors({
     origin: [
       'http://localhost:4200',
-      'https://jorge-caballero-tp2-prog4-2026-c1-1.onrender.com', // reemplazás cuando tengas la URL
+      'https://jorge-caballero-tp-2-prog-4-2026-c1-delta.vercel.app',
+      'https://jorge-caballero-tp-2-prog-4-2026-c1-th72-lcm7l1xrw.vercel.app',
     ],
     credentials: true,
   });
