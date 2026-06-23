@@ -63,13 +63,12 @@ Disponible en `http://localhost:4200`
 - NestJS
 - MongoDB + Mongoose
 - Cloudinary (almacenamiento de imágenes)
-- JWT (autenticación)
 - bcrypt (encriptación de contraseñas)
 
 ### Módulos
-- **Usuarios** — registro, gestión de perfiles
-- **Autenticación** — login con JWT
-- **Publicaciones** — CRUD de publicaciones
+- **Usuarios** — registro
+- **Autenticación** — login
+- **Publicaciones** — publicaciones
 
 ### Endpoints
 
@@ -110,7 +109,7 @@ CLOUDINARY_API_SECRET=
 - [x] Deploy en Vercel
 - [x] Navegación entre componentes
 - [x] Favicon propio
-- [x] Login con validaciones (correo o usuario, contraseña mínimo 8 caracteres, mayúscula y número)
+- [x] Login con validaciones (correo o usuario, contraseña mínimo 6 caracteres)
 - [x] Registro con todos los campos requeridos, imagen de perfil y atributo `perfil`
 
 ### Backend
