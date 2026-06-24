@@ -19,7 +19,7 @@ export class Posts implements OnInit {
   currentUser: any = null;
   orderBy: 'fecha' | 'likes' = 'fecha';
   offset = 0;
-  limit = 10;
+  limit = 5;
   loading = false;
 
   nuevoTitulo = '';
