@@ -1,69 +1,129 @@
 <div class="container-fluid py-4 bg-dark min-vh-100">
-
-  <!-- Navbar simple -->
+  <!-- Navbar -->
   <div class="container mb-4">
     <div class="d-flex justify-content-between align-items-center text-white">
       <h4 class="fw-light m-0">Red Social</h4>
-
       <div class="d-flex gap-3">
-        <a href="/posts" class="text-white text-decoration-none">Inicio</a>
-        <a href="/profile" class="text-white text-decoration-none">Perfil</a>
-        <a href="/login" class="text-white text-decoration-none">Salir</a>
+        <a routerLink="/posts" class="text-white text-decoration-none">Inicio</a>
+        <a routerLink="/profile" class="text-white text-decoration-none">Perfil</a>
+        @if (currentUser.perfil === 'administrador') {
+          <a routerLink="/admin" class="text-white text-decoration-none">Admin</a>
+        }
+        <a routerLink="/login" class="text-white text-decoration-none">Salir</a>
       </div>
     </div>
   </div>
 
   <div class="container">
-
     <!-- Crear post -->
     <div class="card post-card mb-4">
       <div class="card-body">
-
-        <input type="text" class="form-control mb-2" placeholder="Título del post">
-
-        <textarea class="form-control mb-2" rows="3" placeholder="¿Qué estás pensando?"></textarea>
-
+        <input
+          type="text"
+          class="form-control mb-2"
+          placeholder="Título del post"
+          [(ngModel)]="nuevoTitulo"
+        />
+        <textarea
+          class="form-control mb-2"
+          rows="3"
+          placeholder="¿Qué estás pensando?"
+          [(ngModel)]="nuevaDescripcion"
+        ></textarea>
         <div class="d-flex justify-content-between align-items-center">
-          <input type="file" class="form-control w-50">
-
-          <button class="btn btn-dark">
-            Publicar
-          </button>
-        </div>
-
-      </div>
-    </div>
-
-    <!-- Posts feed -->
-    <div class="card post-card mb-3">
-      <div class="card-body">
-        <h6 class="mb-1">Usuario123</h6>
-        <p class="mb-2 text-muted small">Hace 2 horas</p>
-
-        <h5>Título del post</h5>
-        <p>Este es un ejemplo de publicación en la red social.</p>
-
-        <div class="d-flex gap-3">
-          <button class="btn btn-sm btn-outline-light">👍 Me gusta</button>
-          <button class="btn btn-sm btn-outline-light">💬 Comentar</button>
+          <input
+            type="file"
+            class="form-control w-50"
+            accept="image/*"
+            (change)="onFileChange($event)"
+          />
+          <button class="btn btn-dark" (click)="createPost()">Publicar</button>
         </div>
       </div>
     </div>
 
-    <div class="card post-card mb-3">
-      <div class="card-body">
-        <h6 class="mb-1">AnaDev</h6>
-        <p class="mb-2 text-muted small">Hace 1 día</p>
-
-        <h5>Mi primer post</h5>
-        <p>Esto ya empieza a parecer una red social 😄</p>
-
-        <div class="d-flex gap-3">
-          <button class="btn btn-sm btn-outline-light">👍 Me gusta</button>
-          <button class="btn btn-sm btn-outline-light">💬 Comentar</button>
-        </div>
-      </div>
+    <!-- Ordenar -->
+    <div class="d-flex gap-2 mb-3">
+      <button
+        class="btn btn-sm"
+        [class.btn-light]="orderBy === 'fecha'"
+        [class.btn-outline-light]="orderBy !== 'fecha'"
+        (click)="changeOrder('fecha')"
+      >
+        Más recientes
+      </button>
+      <button
+        class="btn btn-sm"
+        [class.btn-light]="orderBy === 'likes'"
+        [class.btn-outline-light]="orderBy !== 'likes'"
+        (click)="changeOrder('likes')"
+      >
+        Más populares
+      </button>
     </div>
 
+    <!-- Loading -->
+    @if (loading) {
+      <div class="d-flex justify-content-center my-5">
+        <div class="spinner-border text-light" role="status">
+          <span class="visually-hidden">Cargando...</span>
+        </div>
+      </div>
+    }
+
+    <!-- Feed -->
+    @for (post of posts; track post._id) {
+      <div class="card post-card mb-3">
+        <div class="card-body">
+          <div class="d-flex justify-content-between align-items-start mb-2">
+            <div>
+              <h6 class="mb-0">{{ post.autor.username }}</h6>
+              <p class="text-muted small mb-0">{{ post.createdAt | date: 'dd/MM/yyyy HH:mm' }}</p>
+            </div>
+            @if (esAutor(post) || esAdmin()) {
+              <button class="btn btn-sm btn-outline-danger" (click)="deletePost(post._id)">
+                Eliminar
+              </button>
+            }
+          </div>
+
+          <h5>{{ post.titulo }}</h5>
+          <p>{{ post.descripcion }}</p>
+
+          @if (post.imagenUrl) {
+            <img
+              [src]="post.imagenUrl"
+              class="img-fluid rounded mb-2"
+              style="max-height: 300px; object-fit: cover"
+            />
+          }
+
+          <div class="d-flex gap-3 mt-2">
+            <button
+              class="btn btn-sm"
+              [class.btn-light]="post.likes.includes(currentUser._id)"
+              [class.btn-outline-light]="!post.likes.includes(currentUser._id)"
+              (click)="toggleLike(post)"
+            >
+              👍 {{ post.likes.length }}
+            </button>
+          </div>
+        </div>
+      </div>
+    }
+
+    <!-- Paginación -->
+    <div class="d-flex justify-content-between mt-3">
+      <button class="btn btn-outline-light btn-sm" (click)="prevPage()" [disabled]="offset === 0">
+        ← Anterior
+      </button>
+      <button
+        class="btn btn-outline-light btn-sm"
+        (click)="nextPage()"
+        [disabled]="posts.length < limit"
+      >
+        Siguiente →
+      </button>
+    </div>
   </div>
 </div>

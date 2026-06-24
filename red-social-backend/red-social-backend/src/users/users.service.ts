@@ -1,4 +1,4 @@
-import { Injectable, Inject, ConflictException } from '@nestjs/common';
+import { Injectable, Inject, ConflictException, NotFoundException } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model } from 'mongoose';
 import * as bcrypt from 'bcrypt';
@@ -58,5 +58,22 @@ export class UsersService {
     });
 
     return newUser.save();
+  }
+
+  // 📋 LISTAR USUARIOS
+  async findAll() {
+    return this.userModel.find({}, { password: 0 });
+  }
+
+  // ✏️ ACTUALIZAR ROL
+  async updateRol(id: string, perfil: string) {
+    const user = await this.userModel.findById(id);
+
+    if (!user) {
+      throw new NotFoundException('Usuario no encontrado');
+    }
+
+    user.perfil = perfil;
+    return user.save();
   }
 }

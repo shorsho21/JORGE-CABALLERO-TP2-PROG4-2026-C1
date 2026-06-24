@@ -22,8 +22,11 @@ export class Login {
   modalType: 'success' | 'error' = 'success';
   //inicio el formulario reactivo:
   form: FormGroup = this.fb.group({
-    email: ['', [Validators.required, Validators.email]],
-    password: ['', [Validators.required, Validators.minLength(6)]],
+    identifier: ['', Validators.required],
+    password: [
+      '',
+      [Validators.required, Validators.minLength(8), Validators.pattern(/^(?=.*[A-Z])(?=.*\d).+$/)],
+    ],
   });
 
   openModal(message: string, type: 'success' | 'error') {
@@ -42,11 +45,12 @@ export class Login {
       return;
     }
 
-    const { email, password } = this.form.value;
+    const { identifier, password } = this.form.value;
 
-    this.authService.login(email, password).subscribe({
+    this.authService.login(identifier, password).subscribe({
       next: (res: any) => {
         localStorage.setItem('user', JSON.stringify(res.user));
+        localStorage.setItem('token', res.token);
         this.openModal('Inicio de sesión exitoso 🎉', 'success');
         setTimeout(() => {
           this.closeModal();

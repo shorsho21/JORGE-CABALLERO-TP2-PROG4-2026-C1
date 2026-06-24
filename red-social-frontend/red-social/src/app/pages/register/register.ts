@@ -2,7 +2,7 @@ import { Component, inject } from '@angular/core';
 import { ReactiveFormsModule, FormBuilder, FormGroup, Validators } from '@angular/forms';
 import { RouterLink } from '@angular/router';
 import { AuthService } from '../../services/auth.service';
-
+import { ChangeDetectorRef } from '@angular/core';
 @Component({
   selector: 'app-register',
   standalone: true,
@@ -13,18 +13,22 @@ import { AuthService } from '../../services/auth.service';
 export class Register {
   private fb = inject(FormBuilder);
   private authService = inject(AuthService);
-
+  private cdr = inject(ChangeDetectorRef);
   showModal = false;
   modalMessage = '';
   modalType: 'success' | 'error' = 'success';
   selectedFile: File | null = null;
+  previewUrl: string | null = null;
 
   form: FormGroup = this.fb.group({
     nombre: ['', Validators.required],
     apellido: ['', Validators.required],
     username: ['', Validators.required],
     email: ['', [Validators.required, Validators.email]],
-    password: ['', [Validators.required, Validators.minLength(6)]],
+    password: [
+      '',
+      [Validators.required, Validators.minLength(8), Validators.pattern(/^(?=.*[A-Z])(?=.*\d).+$/)],
+    ],
     repeatPassword: ['', Validators.required],
     fechaNacimiento: ['', Validators.required],
     descripcion: ['', Validators.required],
@@ -35,6 +39,12 @@ export class Register {
     const input = event.target as HTMLInputElement;
     if (input.files?.length) {
       this.selectedFile = input.files[0];
+      const reader = new FileReader();
+      reader.onload = () => {
+        this.previewUrl = reader.result as string;
+        this.cdr.detectChanges();
+      };
+      reader.readAsDataURL(this.selectedFile);
     }
   }
 
