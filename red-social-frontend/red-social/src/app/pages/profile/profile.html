@@ -1,84 +1,82 @@
 <div class="container-fluid py-4 bg-dark min-vh-100">
-
   <!-- Navbar -->
   <div class="container mb-4">
     <div class="d-flex justify-content-between align-items-center text-white">
       <h4 class="fw-light m-0">Red Social</h4>
-
       <div class="d-flex gap-3">
-        <a href="/posts" class="text-white text-decoration-none">Inicio</a>
-        <a href="/profile" class="text-white text-decoration-none">Perfil</a>
-        <a href="/login" class="text-white text-decoration-none">Salir</a>
+        <a routerLink="/posts" class="text-white text-decoration-none">Inicio</a>
+        <a routerLink="/profile" class="text-white text-decoration-none">Perfil</a>
+        @if (currentUser.perfil === 'administrador') {
+          <a routerLink="/admin" class="text-white text-decoration-none">Admin</a>
+        }
+        <a routerLink="/login" class="text-white text-decoration-none">Salir</a>
       </div>
     </div>
   </div>
 
   <div class="container">
-
+    @if (loading) {
+      <div class="d-flex justify-content-center my-5">
+        <div class="spinner-border text-light" role="status">
+          <span class="visually-hidden">Cargando...</span>
+        </div>
+      </div>
+    }
     <!-- Perfil header -->
-    <div class="card profile-card mb-4">
-      <div class="card-body d-flex align-items-center gap-4 flex-wrap">
+    @if (user) {
+      <div class="card profile-card mb-4">
+        <div class="card-body d-flex align-items-center gap-4 flex-wrap">
+          <img
+            [src]="user.imagenPerfil || 'https://i.pravatar.cc/120'"
+            class="profile-avatar rounded-circle"
+            crossorigin="anonymous"
+            style="width: 100px; height: 100px; object-fit: cover"
+            alt="avatar"
+          />
+          <div>
+            <h4 class="mb-1">{{ user.nombre }} {{ user.apellido }}</h4>
+            <p class="text-muted mb-1">@{{ user.username }}</p>
+            <p class="mb-0">{{ user.descripcion }}</p>
+          </div>
+        </div>
+      </div>
 
-        <img src="https://i.pravatar.cc/120"
-             class="profile-avatar"
-             alt="avatar">
-
-        <div>
-          <h4 class="mb-1">Juan Pérez</h4>
-          <p class="text-muted mb-1">@juan123</p>
-          <p class="mb-0 bio">
-            Apasionado por la programación y el diseño minimalista.
+      <!-- Info -->
+      <div class="card profile-card mb-4">
+        <div class="card-body">
+          <h6 class="mb-3">Información</h6>
+          <p class="mb-1"><strong>Email:</strong> {{ user.email }}</p>
+          <p class="mb-1">
+            <strong>Fecha de nacimiento:</strong> {{ user.fechaNacimiento | date: 'dd/MM/yyyy' }}
           </p>
+          <p class="mb-0"><strong>Rol:</strong> {{ user.perfil }}</p>
         </div>
-
-        <div class="ms-auto text-end">
-          <button class="btn btn-edit">Editar perfil</button>
-        </div>
-
       </div>
-    </div>
 
-    <!-- Stats -->
-    <div class="row mb-4 g-3">
+      <!-- Últimas publicaciones -->
+      <h5 class="text-white mb-3">Últimas publicaciones</h5>
 
-      <div class="col-md-4">
-        <div class="card stat-card">
-          <div class="card-body text-center">
-            <h5>12</h5>
-            <p class="text-muted mb-0">Publicaciones</p>
+      @if (ultimosPosts.length === 0) {
+        <p class="text-muted">No tenés publicaciones aún.</p>
+      }
+
+      @for (post of ultimosPosts; track post._id) {
+        <div class="card mb-3">
+          <div class="card-body">
+            <h6>{{ post.titulo }}</h6>
+            <p class="text-muted small">{{ post.createdAt | date: 'dd/MM/yyyy HH:mm' }}</p>
+            <p>{{ post.descripcion }}</p>
+            @if (post.imagenUrl) {
+              <img
+                [src]="post.imagenUrl"
+                class="img-fluid rounded"
+                style="max-height: 200px; object-fit: cover"
+              />
+            }
+            <p class="mt-2 mb-0 small text-muted">👍 {{ post.likes.length }} me gusta</p>
           </div>
         </div>
-      </div>
-
-      <div class="col-md-4">
-        <div class="card stat-card">
-          <div class="card-body text-center">
-            <h5>48</h5>
-            <p class="text-muted mb-0">Me gusta</p>
-          </div>
-        </div>
-      </div>
-
-      <div class="col-md-4">
-        <div class="card stat-card">
-          <div class="card-body text-center">
-            <h5>3</h5>
-            <p class="text-muted mb-0">Comentarios</p>
-          </div>
-        </div>
-      </div>
-
-    </div>
-
-    <!-- Bio / info -->
-    <div class="card profile-card">
-      <div class="card-body">
-        <h6 class="mb-2">Sobre mí</h6>
-        <p class="mb-0 text-muted">
-          Estudiante de programación. Me gusta construir interfaces limpias, oscuras y minimalistas.
-        </p>
-      </div>
-    </div>
-
+      }
+    }
   </div>
 </div>

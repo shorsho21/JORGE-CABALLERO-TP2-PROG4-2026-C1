@@ -1,0 +1,78 @@
+<div class="container-fluid py-4 bg-dark min-vh-100">
+
+  <!-- Navbar -->
+  <div class="container mb-4">
+    <div class="d-flex justify-content-between align-items-center text-white">
+      <h4 class="fw-light m-0">Red Social — Panel Admin</h4>
+      <div class="d-flex gap-3">
+        <a routerLink="/posts" class="text-white text-decoration-none">Inicio</a>
+        <a routerLink="/profile" class="text-white text-decoration-none">Perfil</a>
+        <a routerLink="/login" class="text-white text-decoration-none">Salir</a>
+      </div>
+    </div>
+  </div>
+
+  <div class="container">
+
+    <h5 class="text-white mb-4">Gestión de usuarios</h5>
+
+    <!-- Spinner -->
+    @if (loading) {
+      <div class="d-flex justify-content-center my-5">
+        <div class="spinner-border text-light" role="status">
+          <span class="visually-hidden">Cargando...</span>
+        </div>
+      </div>
+    }
+
+    <!-- Tabla de usuarios -->
+    @if (!loading) {
+      <div class="card">
+        <div class="card-body p-0">
+          <table class="table table-hover mb-0">
+            <thead class="table-dark">
+              <tr>
+                <th>Avatar</th>
+                <th>Nombre</th>
+                <th>Username</th>
+                <th>Email</th>
+                <th>Rol actual</th>
+                <th>Cambiar rol</th>
+              </tr>
+            </thead>
+            <tbody>
+              @for (usuario of usuarios; track usuario._id) {
+                <tr>
+                  <td>
+                    <img [src]="usuario.imagenPerfil || 'https://i.pravatar.cc/40'"
+                         class="rounded-circle"
+                         style="width: 40px; height: 40px; object-fit: cover;">
+                  </td>
+                  <td>{{ usuario.nombre }} {{ usuario.apellido }}</td>
+                  <td>@{{ usuario.username }}</td>
+                  <td>{{ usuario.email }}</td>
+                  <td>
+                    <span class="badge"
+                          [class.bg-danger]="usuario.perfil === 'administrador'"
+                          [class.bg-secondary]="usuario.perfil === 'usuario'">
+                      {{ usuario.perfil }}
+                    </span>
+                  </td>
+                  <td>
+                    <select class="form-select form-select-sm"
+                            [value]="usuario.perfil"
+                            (change)="updateRol(usuario._id, $any($event.target).value)">
+                      <option value="usuario">usuario</option>
+                      <option value="administrador">administrador</option>
+                    </select>
+                  </td>
+                </tr>
+              }
+            </tbody>
+          </table>
+        </div>
+      </div>
+    }
+
+  </div>
+</div>
