@@ -61,7 +61,7 @@
       }
 
       @for (post of ultimosPosts; track post._id) {
-        <div class="card mb-3">
+        <div class="card mb-3 bg-dark text-white border-secondary">
           <div class="card-body">
             <h6>{{ post.titulo }}</h6>
             <p class="text-muted small">{{ post.createdAt | date: 'dd/MM/yyyy HH:mm' }}</p>
