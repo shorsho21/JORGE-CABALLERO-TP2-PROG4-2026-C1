@@ -27,15 +27,15 @@ export class UsersController {
   ) {
     return this.usersService.create(createUserDto, file);
   }
-
-  // GET — listar todos los usuarios (solo admin)
+  //nuevos enpoints para sprint 2, listar usuarios y actualizar rol, solo para admin
+  // GET — listar todos los usuarios (solo admin para el panel admin)
   @Get()
   @UseGuards(JwtAuthGuard)
   findAll() {
     return this.usersService.findAll();
   }
 
-  // PATCH — actualizar rol (solo admin)
+  // PATCH — actualizar rol (solo admin, par actualizar el rol del usuario en panel admin)
   @Patch(':id/rol')
   @UseGuards(JwtAuthGuard)
   updateRol(

@@ -47,7 +47,7 @@ export class PostsController {
       autorId,
     );
   }
-
+  //tienen guard para que solo puedan dar like o eliminar los que estan logueados y eliminar solo los que son autor del post
   // ❌ BAJA LÓGICA
   @Delete(':id')
   @UseGuards(JwtAuthGuard)

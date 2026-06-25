@@ -5,7 +5,7 @@ import { Model } from 'mongoose';
 import * as bcrypt from 'bcrypt';
 
 import { User } from '../users/schemas/user.schema';
-
+//devuelve un token JWT si el usuario y la contraseña son correctos
 @Injectable()
 export class AuthService {
   constructor(
