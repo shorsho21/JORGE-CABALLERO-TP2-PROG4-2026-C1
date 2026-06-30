@@ -191,3 +191,4 @@ CLOUDINARY_API_SECRET=
 
 **Jorge Caballero**
 Programación 4 — 2026
+
