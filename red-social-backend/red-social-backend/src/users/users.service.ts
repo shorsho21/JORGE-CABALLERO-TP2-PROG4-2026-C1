@@ -17,6 +17,7 @@ export class UsersService {
     private cloudinary: any,
   ) {}
 
+  //creacion de usuario, con dto, imagen y hash de pass.
   async create(createUserDto: CreateUserDto, file: Express.Multer.File) {
     let imageUrl = '';
 
@@ -60,6 +61,7 @@ export class UsersService {
     return newUser.save();
   }
 
+  //metodos nuevos sprint 2, para lista rlos usuarios y actualizar el rol usando en la vista admin
   // 📋 LISTAR USUARIOS
   async findAll() {
     return this.userModel.find({}, { password: 0 });

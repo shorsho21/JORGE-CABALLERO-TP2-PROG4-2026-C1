@@ -22,7 +22,7 @@ export class PostsService {
   // 📝 CREAR PUBLICACIÓN
   async create(createPostDto: CreatePostDto, autorId: string, file: any) {
     let imageUrl = '';
-
+    //si existe un archivo lo subo a cloudinary y obtengo la url
     if (file) {
       const result = await this.cloudinary.uploader.upload(
         `data:${file.mimetype};base64,${file.buffer.toString('base64')}`,

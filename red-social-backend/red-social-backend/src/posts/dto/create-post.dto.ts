@@ -6,7 +6,7 @@ export class CreatePostDto {
 
   @IsString()
   descripcion: string;
-
+  //la publicacion puede o no tener imagen
   @IsOptional()
   @IsString()
   imagenUrl?: string;
