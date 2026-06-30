@@ -51,30 +51,29 @@ export class PostsController {
   // ❌ BAJA LÓGICA
   @Delete(':id')
   @UseGuards(JwtAuthGuard)
-  remove(
-    @Param('id') postId: string,
-    @Request() req: any,
-  ) {
+  remove(@Param('id') postId: string, @Request() req: any) {
     return this.postsService.remove(postId, req.user.userId, req.user.perfil);
   }
 
   // ❤️ DAR LIKE
   @Post(':id/likes')
   @UseGuards(JwtAuthGuard)
-  addLike(
-    @Param('id') postId: string,
-    @Request() req: any,
-  ) {
+  addLike(@Param('id') postId: string, @Request() req: any) {
     return this.postsService.addLike(postId, req.user.userId);
   }
 
   // 💔 QUITAR LIKE
   @Delete(':id/likes')
   @UseGuards(JwtAuthGuard)
-  removeLike(
-    @Param('id') postId: string,
-    @Request() req: any,
-  ) {
+  removeLike(@Param('id') postId: string, @Request() req: any) {
     return this.postsService.removeLike(postId, req.user.userId);
+  }
+
+  // 🔍 TRAER PUBLICACIÓN POR ID
+  // Ruta pública — no requiere token
+  // La usa la página de detalle para mostrar la publicación completa
+  @Get(':id')
+  findOne(@Param('id') id: string) {
+    return this.postsService.findOne(id);
   }
 }

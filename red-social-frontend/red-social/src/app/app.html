@@ -1,1 +1,58 @@
-<router-outlet></router-outlet>
+<!-- src/app/app.html ← reemplazás el contenido anterior -->
+
+<!-- Spinner de inicio mientras validamos el token -->
+@if (cargando) {
+  <div class="d-flex justify-content-center align-items-center vh-100 bg-dark">
+    <div class="text-center text-white">
+      <div class="spinner-border mb-3" role="status">
+        <span class="visually-hidden">Cargando...</span>
+      </div>
+      <p class="fw-light opacity-75">Verificando sesión...</p>
+    </div>
+  </div>
+}
+
+<!-- Contenido de la app una vez validado el token -->
+@if (!cargando) {
+  <router-outlet />
+}
+
+<!-- Modal de extensión de sesión -->
+<!-- Vive acá arriba de todo para estar disponible en cualquier página -->
+@if (mostrarModalSesion) {
+  <div class="modal d-block" tabindex="-1" style="background: rgba(0,0,0,0.6)">
+    <div class="modal-dialog modal-dialog-centered">
+      <div class="modal-content">
+
+        <div class="modal-header bg-warning">
+          <h5 class="modal-title text-dark">⚠️ Tu sesión está por vencer</h5>
+        </div>
+
+        <div class="modal-body">
+          <p class="mb-0">
+            Tu sesión expira en <strong>5 minutos</strong>.
+            ¿Querés extenderla?
+          </p>
+        </div>
+
+        <div class="modal-footer">
+          <!-- Rechazar → cierra sesión inmediatamente -->
+          <button
+            class="btn btn-outline-secondary"
+            (click)="rechazarExtension()"
+          >
+            No, cerrar sesión
+          </button>
+          <!-- Aceptar → refresca el token y reinicia el timer -->
+          <button
+            class="btn btn-dark"
+            (click)="extenderSesion()"
+          >
+            Sí, extender sesión
+          </button>
+        </div>
+
+      </div>
+    </div>
+  </div>
+}

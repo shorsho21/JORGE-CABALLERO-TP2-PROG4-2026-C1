@@ -1,3 +1,5 @@
+// src/auth/auth.module.ts ← ya existe, reemplazás el contenido
+
 import { Module } from '@nestjs/common';
 import { MongooseModule } from '@nestjs/mongoose';
 import { JwtModule } from '@nestjs/jwt';
@@ -15,7 +17,11 @@ import { User, UserSchema } from '../users/schemas/user.schema';
     JwtModule.registerAsync({
       useFactory: (configService: ConfigService) => ({
         secret: configService.get<string>('JWT_SECRET'),
-        signOptions: { expiresIn: '7d' },
+        signOptions: {
+          // ⚠️ Cambiamos de '7d' a '15m' según el requerimiento del sprint
+          // Esto hace que el token expire a los 15 minutos de ser emitido
+          expiresIn: '15m',
+        },
       }),
       inject: [ConfigService],
     }),

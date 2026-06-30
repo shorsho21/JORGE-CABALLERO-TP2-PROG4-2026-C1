@@ -139,4 +139,35 @@ export class PostsService {
     post.likes = post.likes.filter((id) => id.toString() !== userId) as any;
     return post.save();
   }
+
+  // src/posts/posts.service.ts ← agregás este método dentro de la clase PostsService
+
+  // 🔍 TRAER PUBLICACIÓN POR ID
+  async findOne(postId: string) {
+    const posts = await this.postModel
+      .aggregate([
+        // Filtramos por id y que no esté eliminada
+        { $match: { _id: new Types.ObjectId(postId), eliminado: false } },
+        // Hacemos populate manual con aggregate para traer los datos del autor
+        {
+          $lookup: {
+            from: 'users',
+            localField: 'autor',
+            foreignField: '_id',
+            as: 'autor',
+          },
+        },
+        { $unwind: '$autor' },
+        // Excluimos la password del autor por seguridad
+        { $project: { 'autor.password': 0 } },
+      ])
+      .exec();
+
+    if (!posts.length) {
+      throw new NotFoundException('Publicación no encontrada');
+    }
+
+    // aggregate siempre devuelve un array — tomamos el primer elemento
+    return posts[0];
+  }
 }

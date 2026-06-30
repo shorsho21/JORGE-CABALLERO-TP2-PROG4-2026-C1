@@ -1,11 +1,12 @@
 import { Component, inject, OnInit, ChangeDetectorRef } from '@angular/core';
-import { RouterLink } from '@angular/router';
+// import { RouterLink } from '@angular/router';
 import { AuthService } from '../../services/auth.service';
+import { Navbar } from '../../components/navbar/navbar';
 
 @Component({
   selector: 'app-admin',
   standalone: true,
-  imports: [RouterLink],
+  imports: [Navbar],
   templateUrl: './admin.html',
   styleUrl: './admin.css',
 })

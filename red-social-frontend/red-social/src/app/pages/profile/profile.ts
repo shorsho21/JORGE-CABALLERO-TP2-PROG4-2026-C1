@@ -1,12 +1,12 @@
 import { Component, inject, OnInit, ChangeDetectorRef } from '@angular/core';
-import { RouterLink } from '@angular/router';
+// import { RouterLink } from '@angular/router';
 import { DatePipe } from '@angular/common';
 import { AuthService } from '../../services/auth.service';
-
+import { Navbar } from '../../components/navbar/navbar';
 @Component({
   selector: 'app-profile',
   standalone: true,
-  imports: [RouterLink, DatePipe],
+  imports: [ DatePipe, Navbar],
   templateUrl: './profile.html',
   styleUrl: './profile.css',
 })

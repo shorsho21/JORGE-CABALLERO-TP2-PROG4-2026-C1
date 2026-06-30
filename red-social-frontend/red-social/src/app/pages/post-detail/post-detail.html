@@ -1,0 +1,225 @@
+<!-- src/app/pages/post-detail/post-detail.html -->
+
+<div class="min-vh-100" style="background: #0f0f0f">
+  <app-navbar />
+
+  <div class="container py-5" style="max-width: 680px">
+    <!-- Spinner de carga inicial -->
+    @if (loading) {
+      <div class="d-flex justify-content-center py-5">
+        <div class="spinner-border" style="color: #555" role="status">
+          <span class="visually-hidden">Cargando...</span>
+        </div>
+      </div>
+    }
+
+    <!-- Publicación -->
+    @if (post && !loading) {
+      <div
+        class="mb-5 rounded-4 overflow-hidden"
+        style="background: #1a1a1a; border: 1px solid #2a2a2a"
+      >
+        <!-- Autor y fecha -->
+        <div class="d-flex align-items-center gap-3 px-4 pt-4 pb-2">
+          <img
+            [src]="post.autor?.imagenPerfil || 'https://i.pravatar.cc/45?u=' + post.autor?._id"
+            class="rounded-circle"
+            style="width: 46px; height: 46px; object-fit: cover; border: 2px solid #333"
+          />
+          <div>
+            <p class="mb-0 fw-semibold text-white" style="font-size: 0.95rem">
+              {{ post.autor?.username }}
+            </p>
+            <p class="mb-0" style="color: #666; font-size: 0.78rem">
+              {{ post.createdAt | date: 'dd MMM yyyy · HH:mm' }}
+            </p>
+          </div>
+        </div>
+
+        <!-- Contenido -->
+        <div class="px-4 py-3">
+          <h4 class="text-white fw-semibold mb-2" style="font-size: 1.3rem">{{ post.titulo }}</h4>
+          <p style="color: #bbb; font-size: 0.95rem; line-height: 1.7; margin-bottom: 0">
+            {{ post.descripcion }}
+          </p>
+        </div>
+
+        <!-- Imagen -->
+        @if (post.imagenUrl) {
+          <div class="px-4 pb-2">
+            <img
+              [src]="post.imagenUrl"
+              class="w-100 rounded-3"
+              style="max-height: 450px; object-fit: cover"
+            />
+          </div>
+        }
+
+        <!-- Likes -->
+        <div class="px-4 py-3 d-flex align-items-center gap-2" style="border-top: 1px solid #222">
+          <span style="color: #4caf7d; font-size: 1rem">♥</span>
+          <span style="color: #888; font-size: 0.88rem">{{ post.likes?.length }} me gusta</span>
+        </div>
+      </div>
+
+      <!-- Sección de comentarios -->
+      <h6 class="text-white fw-semibold mb-3" style="font-size: 1rem; letter-spacing: 0.3px">
+        Comentarios
+      </h6>
+
+      <!-- Escribir comentario -->
+      @if (currentUser?._id) {
+        <div class="mb-4 p-3 rounded-4" style="background: #1a1a1a; border: 1px solid #2a2a2a">
+          <textarea
+            class="form-control mb-2 border-0 text-white"
+            rows="2"
+            placeholder="Escribí un comentario..."
+            [(ngModel)]="nuevoComentario"
+            style="background: #252525; border-radius: 10px; resize: none; font-size: 0.88rem"
+          ></textarea>
+          <div class="d-flex justify-content-end">
+            <button
+              class="btn px-4 py-1 fw-semibold"
+              (click)="enviarComentario()"
+              [disabled]="!nuevoComentario.trim()"
+              style="background: #fff; color: #000; border-radius: 20px; font-size: 0.85rem"
+            >
+              Comentar
+            </button>
+          </div>
+        </div>
+      }
+
+      <!-- Lista de comentarios -->
+      @for (comentario of comentarios; track comentario._id) {
+        <div class="mb-2 p-3 rounded-4" style="background: #161616; border: 1px solid #252525">
+          <!-- Cabecera del comentario -->
+          <div class="d-flex justify-content-between align-items-start">
+            <div class="d-flex align-items-center gap-2">
+              <img
+                [src]="
+                  comentario.autorId?.imagenPerfil ||
+                  'https://i.pravatar.cc/32?u=' + comentario.autorId?._id
+                "
+                class="rounded-circle"
+                style="width: 32px; height: 32px; object-fit: cover; border: 1px solid #333"
+              />
+              <div>
+                <span class="fw-semibold text-white" style="font-size: 0.85rem">
+                  {{ comentario.autorId?.username }}
+                </span>
+                <span class="ms-2" style="color: #555; font-size: 0.75rem">
+                  {{ comentario.createdAt | date: 'dd/MM/yyyy HH:mm' }}
+                </span>
+                @if (comentario.modificado) {
+                  <span class="ms-1 fst-italic" style="color: #555; font-size: 0.75rem"
+                    >(editado)</span
+                  >
+                }
+              </div>
+            </div>
+
+            <!-- Botón editar — solo visible para el autor del comentario -->
+            @if (esAutorComentario(comentario) && comentarioEditandoId !== comentario._id) {
+              <button
+                class="btn btn-sm"
+                (click)="iniciarEdicion(comentario)"
+                style="
+                  color: #666;
+                  font-size: 0.75rem;
+                  border: 1px solid #2a2a2a;
+                  border-radius: 20px;
+                  padding: 2px 12px;
+                "
+              >
+                Editar
+              </button>
+            }
+          </div>
+
+          <!-- Modo lectura -->
+          @if (comentarioEditandoId !== comentario._id) {
+            <p class="mb-0 mt-2" style="color: #bbb; font-size: 0.88rem; margin-left: 42px">
+              {{ comentario.mensaje }}
+            </p>
+          }
+
+          <!-- Modo edición -->
+          @if (comentarioEditandoId === comentario._id) {
+            <div class="mt-2" style="margin-left: 42px">
+              <textarea
+                class="form-control mb-2 border-0 text-white"
+                rows="2"
+                [(ngModel)]="textoEditando"
+                style="background: #0f0f0f; border-radius: 10px; resize: none; font-size: 0.85rem"
+              ></textarea>
+              <div class="d-flex gap-2 justify-content-end">
+                <button
+                  class="btn btn-sm"
+                  (click)="cancelarEdicion()"
+                  style="
+                    color: #888;
+                    font-size: 0.78rem;
+                    border: 1px solid #333;
+                    border-radius: 20px;
+                    padding: 3px 14px;
+                  "
+                >
+                  Cancelar
+                </button>
+                <button
+                  class="btn btn-sm fw-semibold"
+                  (click)="guardarEdicion(comentario)"
+                  [disabled]="!textoEditando.trim()"
+                  style="
+                    background: #fff;
+                    color: #000;
+                    border-radius: 20px;
+                    padding: 3px 14px;
+                    font-size: 0.78rem;
+                  "
+                >
+                  Guardar
+                </button>
+              </div>
+            </div>
+          }
+        </div>
+      }
+
+      <!-- Sin comentarios -->
+      @if (comentarios.length === 0 && !loading) {
+        <p class="text-center py-4" style="color: #555; font-size: 0.9rem">
+          Todavía no hay comentarios. ¡Sé el primero!
+        </p>
+      }
+
+      <!-- Botón cargar más -->
+      @if (hayMasComentarios && comentarios.length > 0) {
+        <div class="d-flex justify-content-center mt-4">
+          <button
+            class="btn btn-sm px-4 py-2"
+            (click)="cargarMas()"
+            [disabled]="loadingMas"
+            style="
+              border-radius: 20px;
+              border: 1px solid #333;
+              color: #aaa;
+              background: transparent;
+              font-size: 0.85rem;
+            "
+          >
+            @if (loadingMas) {
+              <span
+                class="spinner-border spinner-border-sm me-2"
+                style="width: 0.8rem; height: 0.8rem"
+                role="status"
+              ></span>
+            }
+            Cargar más comentarios
+          </button>
+        </div>
+      }
+    }
+  </div>
+</div>

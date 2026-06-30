@@ -1,0 +1,31 @@
+<!-- src/app/components/navbar/navbar.html ← archivo nuevo -->
+
+<nav style="background: #111; border-bottom: 1px solid #222;" class="sticky-top">
+  <div class="container py-3" style="max-width: 680px;">
+    <div class="d-flex justify-content-between align-items-center">
+      <a routerLink="/posts" class="text-decoration-none">
+        <span class="fw-bold text-white fs-5">● RedSocial</span>
+      </a>
+      <div class="d-flex gap-4 align-items-center">
+        <a routerLink="/posts" class="text-decoration-none" style="color: #aaa; font-size: 0.9rem;">
+          Inicio
+        </a>
+        <a routerLink="/profile" class="text-decoration-none" style="color: #aaa; font-size: 0.9rem;">
+          Perfil
+        </a>
+        @if (esAdmin()) {
+          <a routerLink="/admin" class="text-decoration-none" style="color: #aaa; font-size: 0.9rem;">
+            Admin
+          </a>
+        }
+        <button
+          (click)="salir()"
+          class="btn btn-sm px-3 py-1 fw-semibold"
+          style="background: #222; color: #fff; border: 1px solid #333; border-radius: 20px; font-size: 0.85rem;"
+        >
+          Salir
+        </button>
+      </div>
+    </div>
+  </div>
+</nav>
