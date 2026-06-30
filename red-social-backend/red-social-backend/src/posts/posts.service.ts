@@ -19,7 +19,7 @@ export class PostsService {
     private cloudinary: any,
   ) {}
 
-  // 📝 CREAR PUBLICACIÓN
+  // CREAR PUBLICACIÓN
   async create(createPostDto: CreatePostDto, autorId: string, file: any) {
     let imageUrl = '';
     //si existe un archivo lo subo a cloudinary y obtengo la url
@@ -40,7 +40,7 @@ export class PostsService {
     return newPost.save();
   }
 
-  // 📋 LISTAR PUBLICACIONES
+  // LISTAR PUBLICACIONES
   async findAll(
     offset = 0,
     limit = 10,
@@ -81,7 +81,7 @@ export class PostsService {
       .exec();
   }
 
-  // ❌ BAJA LÓGICA
+  // BAJA LÓGICA
   async remove(postId: string, userId: string, perfil: string) {
     const post = await this.postModel.findById(postId);
 
@@ -102,7 +102,7 @@ export class PostsService {
     return post.save();
   }
 
-  // ❤️ DAR LIKE
+  // DAR LIKE
   async addLike(postId: string, userId: string) {
     const post = await this.postModel.findById(postId);
 
@@ -120,7 +120,7 @@ export class PostsService {
     return post.save();
   }
 
-  // 💔 QUITAR LIKE
+  // QUITAR LIKE
   async removeLike(postId: string, userId: string) {
     const post = await this.postModel.findById(postId);
 
@@ -140,9 +140,7 @@ export class PostsService {
     return post.save();
   }
 
-  // src/posts/posts.service.ts ← agregás este método dentro de la clase PostsService
-
-  // 🔍 TRAER PUBLICACIÓN POR ID
+  // TRAER PUBLICACIÓN POR ID
   async findOne(postId: string) {
     const posts = await this.postModel
       .aggregate([

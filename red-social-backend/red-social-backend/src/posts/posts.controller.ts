@@ -20,7 +20,7 @@ import { CreatePostDto } from './dto/create-post.dto';
 export class PostsController {
   constructor(private readonly postsService: PostsService) {}
 
-  // 📝 CREAR PUBLICACIÓN
+  // CREAR PUBLICACIÓN
   @Post()
   @UseGuards(JwtAuthGuard)
   @UseInterceptors(FileInterceptor('file'))
@@ -32,7 +32,7 @@ export class PostsController {
     return this.postsService.create(createPostDto, req.user.userId, file);
   }
 
-  // 📋 LISTAR PUBLICACIONES
+  // LISTAR PUBLICACIONES
   @Get()
   findAll(
     @Query('offset') offset: string,
@@ -48,28 +48,28 @@ export class PostsController {
     );
   }
   //tienen guard para que solo puedan dar like o eliminar los que estan logueados y eliminar solo los que son autor del post
-  // ❌ BAJA LÓGICA
+  // BAJA LÓGICA
   @Delete(':id')
   @UseGuards(JwtAuthGuard)
   remove(@Param('id') postId: string, @Request() req: any) {
     return this.postsService.remove(postId, req.user.userId, req.user.perfil);
   }
 
-  // ❤️ DAR LIKE
+  // DAR LIKE
   @Post(':id/likes')
   @UseGuards(JwtAuthGuard)
   addLike(@Param('id') postId: string, @Request() req: any) {
     return this.postsService.addLike(postId, req.user.userId);
   }
 
-  // 💔 QUITAR LIKE
+  // QUITAR LIKE
   @Delete(':id/likes')
   @UseGuards(JwtAuthGuard)
   removeLike(@Param('id') postId: string, @Request() req: any) {
     return this.postsService.removeLike(postId, req.user.userId);
   }
 
-  // 🔍 TRAER PUBLICACIÓN POR ID
+  // TRAER PUBLICACIÓN POR ID
   // Ruta pública — no requiere token
   // La usa la página de detalle para mostrar la publicación completa
   @Get(':id')
