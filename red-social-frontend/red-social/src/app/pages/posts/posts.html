@@ -1,71 +1,81 @@
-<div class="container-fluid py-4 bg-dark min-vh-100">
-  <!-- Navbar -->
-  <div class="container mb-4">
-    <div class="d-flex justify-content-between align-items-center text-white">
-      <h4 class="fw-light m-0">Red Social</h4>
-      <div class="d-flex gap-3">
-        <a routerLink="/posts" class="text-white text-decoration-none">Inicio</a>
-        <a routerLink="/profile" class="text-white text-decoration-none">Perfil</a>
-        @if (currentUser.perfil === 'administrador') {
-          <a routerLink="/admin" class="text-white text-decoration-none">Admin</a>
-        }
-        <a routerLink="/login" class="text-white text-decoration-none">Salir</a>
-      </div>
-    </div>
-  </div>
+<!-- src/app/pages/posts/posts.html -->
 
-  <div class="container">
+<div class="min-vh-100" style="background: #0f0f0f;">
+
+  <!-- Navbar -->
+  <app-navbar />
+
+  <div class="container py-5" style="max-width: 680px;">
+
     <!-- Crear post -->
-    <div class="card post-card mb-4">
-      <div class="card-body">
-        <input
-          type="text"
-          class="form-control mb-2"
-          placeholder="Título del post"
-          [(ngModel)]="nuevoTitulo"
+    <div class="mb-5 p-4 rounded-4" style="background: #1a1a1a; border: 1px solid #2a2a2a;">
+      <div class="d-flex gap-3 align-items-start">
+        <!-- Avatar del usuario -->
+        <img
+          [src]="currentUser.imagenPerfil || 'https://i.pravatar.cc/40?u=' + currentUser._id"
+          class="rounded-circle flex-shrink-0"
+          style="width: 42px; height: 42px; object-fit: cover; border: 2px solid #333;"
         />
-        <textarea
-          class="form-control mb-2"
-          rows="3"
-          placeholder="¿Qué estás pensando?"
-          [(ngModel)]="nuevaDescripcion"
-        ></textarea>
-        <div class="d-flex justify-content-between align-items-center">
+        <div class="w-100">
           <input
-            type="file"
-            class="form-control w-50"
-            accept="image/*"
-            (change)="onFileChange($event)"
+            type="text"
+            class="form-control mb-2 border-0 text-white fw-semibold"
+            placeholder="Título de tu publicación"
+            [(ngModel)]="nuevoTitulo"
+            style="background: #252525; border-radius: 10px; font-size: 0.95rem;"
           />
-          <button class="btn btn-dark" (click)="createPost()">Publicar</button>
+          <textarea
+            class="form-control border-0 text-white mb-3"
+            rows="3"
+            placeholder="¿Qué estás pensando?"
+            [(ngModel)]="nuevaDescripcion"
+            style="background: #252525; border-radius: 10px; resize: none; font-size: 0.9rem;"
+          ></textarea>
+          <div class="d-flex justify-content-between align-items-center">
+            <label class="d-flex align-items-center gap-2 px-3 py-2 rounded-3"
+                   style="background: #252525; cursor: pointer; border: 1px solid #333;">
+              <span style="font-size: 1rem;">🖼️</span>
+              <span style="color: #aaa; font-size: 0.85rem;">Imagen</span>
+              <input type="file" class="d-none" accept="image/*" (change)="onFileChange($event)" />
+            </label>
+            <button
+              class="btn px-4 py-2 fw-semibold"
+              (click)="createPost()"
+              style="background: #fff; color: #000; border-radius: 20px; font-size: 0.88rem;"
+            >
+              Publicar
+            </button>
+          </div>
         </div>
       </div>
     </div>
 
     <!-- Ordenar -->
-    <div class="d-flex gap-2 mb-3">
+    <div class="d-flex gap-2 mb-4">
       <button
-        class="btn btn-sm"
-        [class.btn-light]="orderBy === 'fecha'"
-        [class.btn-outline-light]="orderBy !== 'fecha'"
+        class="btn btn-sm px-3 py-1 fw-semibold"
         (click)="changeOrder('fecha')"
+        [style.background]="orderBy === 'fecha' ? '#fff' : 'transparent'"
+        [style.color]="orderBy === 'fecha' ? '#000' : '#aaa'"
+        style="border-radius: 20px; border: 1px solid #333; font-size: 0.85rem; transition: all 0.2s;"
       >
-        Más recientes
+        Recientes
       </button>
       <button
-        class="btn btn-sm"
-        [class.btn-light]="orderBy === 'likes'"
-        [class.btn-outline-light]="orderBy !== 'likes'"
+        class="btn btn-sm px-3 py-1 fw-semibold"
         (click)="changeOrder('likes')"
+        [style.background]="orderBy === 'likes' ? '#fff' : 'transparent'"
+        [style.color]="orderBy === 'likes' ? '#000' : '#aaa'"
+        style="border-radius: 20px; border: 1px solid #333; font-size: 0.85rem; transition: all 0.2s;"
       >
-        Más populares
+        Populares
       </button>
     </div>
 
-    <!-- Loading -->
+    <!-- Spinner -->
     @if (loading) {
-      <div class="d-flex justify-content-center my-5">
-        <div class="spinner-border text-light" role="status">
+      <div class="d-flex justify-content-center py-5">
+        <div class="spinner-border" style="color: #555;" role="status">
           <span class="visually-hidden">Cargando...</span>
         </div>
       </div>
@@ -73,57 +83,104 @@
 
     <!-- Feed -->
     @for (post of posts; track post._id) {
-      <div class="card post-card mb-3">
-        <div class="card-body">
-          <div class="d-flex justify-content-between align-items-start mb-2">
+      <div class="mb-3 rounded-4 overflow-hidden"
+           style="background: #1a1a1a; border: 1px solid #2a2a2a; transition: border-color 0.2s;">
+
+        <!-- Cabecera -->
+        <div class="d-flex justify-content-between align-items-center px-4 pt-4 pb-2">
+          <div class="d-flex align-items-center gap-3">
+            <img
+              [src]="post.autor.imagenPerfil || 'https://i.pravatar.cc/40?u=' + post.autor._id"
+              class="rounded-circle"
+              style="width: 40px; height: 40px; object-fit: cover; border: 2px solid #333;"
+            />
             <div>
-              <h6 class="mb-0">{{ post.autor.username }}</h6>
-              <p class="text-muted small mb-0">{{ post.createdAt | date: 'dd/MM/yyyy HH:mm' }}</p>
+              <p class="mb-0 fw-semibold text-white" style="font-size: 0.92rem;">
+                {{ post.autor.username }}
+              </p>
+              <p class="mb-0" style="color: #666; font-size: 0.78rem;">
+                {{ post.createdAt | date: 'dd MMM yyyy · HH:mm' }}
+              </p>
             </div>
-            @if (esAutor(post) || esAdmin()) {
-              <button class="btn btn-sm btn-outline-danger" (click)="deletePost(post._id)">
-                Eliminar
-              </button>
-            }
           </div>
 
-          <h5>{{ post.titulo }}</h5>
-          <p>{{ post.descripcion }}</p>
-
-          @if (post.imagenUrl) {
-            <img
-              [src]="post.imagenUrl"
-              class="img-fluid rounded mb-2"
-              style="max-height: 300px; object-fit: cover"
-            />
-          }
-
-          <div class="d-flex gap-3 mt-2">
+          @if (esAutor(post) || esAdmin()) {
             <button
               class="btn btn-sm"
-              [class.btn-light]="post.likes.includes(currentUser._id)"
-              [class.btn-outline-light]="!post.likes.includes(currentUser._id)"
-              (click)="toggleLike(post)"
+              (click)="deletePost(post._id)"
+              style="color: #666; font-size: 0.8rem; border: 1px solid #2a2a2a; border-radius: 20px; padding: 3px 12px;"
             >
-              👍 {{ post.likes.length }}
+              Eliminar
             </button>
-          </div>
+          }
         </div>
+
+        <!-- Contenido -->
+        <div class="px-4 py-2">
+          <h6 class="text-white fw-semibold mb-1" style="font-size: 1rem;">{{ post.titulo }}</h6>
+          <p style="color: #bbb; font-size: 0.9rem; line-height: 1.6; margin-bottom: 0;">
+            {{ post.descripcion }}
+          </p>
+        </div>
+
+        <!-- Imagen -->
+        @if (post.imagenUrl) {
+          <div class="px-4 pt-2">
+            <img
+              [src]="post.imagenUrl"
+              class="w-100 rounded-3"
+              style="max-height: 360px; object-fit: cover;"
+            />
+          </div>
+        }
+
+        <!-- Acciones -->
+        <div class="d-flex justify-content-between align-items-center px-4 py-3 mt-1"
+             style="border-top: 1px solid #222;">
+          <button
+            class="btn btn-sm d-flex align-items-center gap-2"
+            (click)="toggleLike(post)"
+            style="border-radius: 20px; padding: 5px 14px; font-size: 0.85rem; transition: all 0.2s;"
+            [style.background]="post.likes.includes(currentUser._id) ? '#1d3a2a' : 'transparent'"
+            [style.color]="post.likes.includes(currentUser._id) ? '#4caf7d' : '#888'"
+            [style.border]="post.likes.includes(currentUser._id) ? '1px solid #2d5a3d' : '1px solid #333'"
+          >
+            {{ post.likes.includes(currentUser._id) ? '♥' : '♡' }}
+            <span>{{ post.likes.length }}</span>
+          </button>
+
+          <a
+            [routerLink]="['/posts', post._id]"
+            class="btn btn-sm d-flex align-items-center gap-2"
+            style="border-radius: 20px; padding: 5px 16px; font-size: 0.85rem;
+                   color: #aaa; border: 1px solid #333; text-decoration: none;"
+          >
+            💬 Ver publicación
+          </a>
+        </div>
+
       </div>
     }
 
     <!-- Paginación -->
-    <div class="d-flex justify-content-between mt-3">
-      <button class="btn btn-outline-light btn-sm" (click)="prevPage()" [disabled]="offset === 0">
+    <div class="d-flex justify-content-between mt-4">
+      <button
+        class="btn btn-sm px-4"
+        (click)="prevPage()"
+        [disabled]="offset === 0"
+        style="border-radius: 20px; border: 1px solid #333; color: #aaa; background: transparent; font-size: 0.85rem;"
+      >
         ← Anterior
       </button>
       <button
-        class="btn btn-outline-light btn-sm"
+        class="btn btn-sm px-4"
         (click)="nextPage()"
         [disabled]="posts.length < limit"
+        style="border-radius: 20px; border: 1px solid #333; color: #aaa; background: transparent; font-size: 0.85rem;"
       >
         Siguiente →
       </button>
     </div>
+
   </div>
 </div>

@@ -1,74 +1,111 @@
+/* src/app/pages/posts/posts.css */
+
 :host {
   display: block;
 }
 
-/* Fondo general */
-.container-fluid {
-  background: radial-gradient(circle at top, #1a1a1a, #0f0f0f);
-}
+/* ── INPUTS ──────────────────────────────────────────────────────────────── */
 
-/* Navbar */
-h4 {
-  letter-spacing: 0.5px;
-}
-
-/* Links navbar */
-a {
-  opacity: 0.8;
-  transition: 0.2s;
-}
-
-a:hover {
-  opacity: 1;
-}
-
-/* Cards de posts */
-.post-card {
-  background: #161616;
-  border: 1px solid rgba(255,255,255,0.05);
-  color: white;
-  border-radius: 14px;
-  transition: 0.2s ease;
-}
-
-.post-card:hover {
-  transform: translateY(-2px);
-}
-
-/* Inputs */
 .form-control {
-  background: #0f0f0f;
-  border: 1px solid rgba(255,255,255,0.08);
+  background: #252525;
+  border: 1px solid #333;
   color: white;
   border-radius: 10px;
+  transition: border-color 0.2s;
 }
 
 .form-control:focus {
-  background: #0f0f0f;
+  background: #2a2a2a;
   color: white;
-  border-color: #444;
+  border-color: #555;
   box-shadow: none;
 }
 
-/* Botones outline claros */
-.btn-outline-light {
-  border-radius: 10px;
-  border-color: rgba(255,255,255,0.2);
+.form-control::placeholder {
+  color: #555;
 }
 
-.btn-outline-light:hover {
-  background: white;
-  color: black;
+/* ── CARDS DEL FEED ──────────────────────────────────────────────────────── */
+
+/* Hover sutil sobre cada publicación */
+.rounded-4 {
+  transition: border-color 0.2s ease;
+}
+
+.rounded-4:hover {
+  border-color: #3a3a3a !important;
+}
+
+/* ── NAVBAR ──────────────────────────────────────────────────────────────── */
+
+nav a {
+  transition: color 0.2s ease;
+}
+
+nav a:hover {
+  color: #fff !important;
+}
+
+/* ── BOTONES ─────────────────────────────────────────────────────────────── */
+
+/* Botones de acción (like, ver publicación, paginación) */
+.btn {
+  transition: all 0.2s ease;
+}
+
+.btn:hover:not(:disabled) {
+  border-color: #555 !important;
+  color: #fff !important;
 }
 
 /* Botón publicar */
-.btn-dark {
-  border-radius: 10px;
-  background: #fff;
-  color: #000;
-  border: none;
+.btn[style*="background: #fff"] {
+  transition: background 0.2s ease, transform 0.1s ease;
 }
 
-.btn-dark:hover {
-  background: #e5e5e5;
+.btn[style*="background: #fff"]:hover {
+  background: #e0e0e0 !important;
+  transform: translateY(-1px);
+}
+
+/* Botones deshabilitados */
+.btn:disabled {
+  opacity: 0.3;
+  cursor: not-allowed;
+}
+
+/* ── SCROLLBAR ───────────────────────────────────────────────────────────── */
+
+::-webkit-scrollbar {
+  width: 6px;
+}
+
+::-webkit-scrollbar-track {
+  background: #0f0f0f;
+}
+
+::-webkit-scrollbar-thumb {
+  background: #333;
+  border-radius: 10px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: #555;
+}
+
+/* ── IMÁGENES DE POST ────────────────────────────────────────────────────── */
+
+img.rounded-3 {
+  transition: opacity 0.2s ease;
+}
+
+img.rounded-3:hover {
+  opacity: 0.92;
+}
+
+/* ── SPINNER ─────────────────────────────────────────────────────────────── */
+
+.spinner-border {
+  width: 1.8rem;
+  height: 1.8rem;
 }

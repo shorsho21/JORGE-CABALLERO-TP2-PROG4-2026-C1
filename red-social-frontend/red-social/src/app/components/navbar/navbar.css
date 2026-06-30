@@ -1,0 +1,13 @@
+/* src/app/components/navbar/navbar.css ← archivo nuevo */
+
+nav a {
+  transition: color 0.2s ease;
+}
+
+nav a:hover {
+  color: #fff !important;
+}
+
+button:hover {
+  filter: brightness(1.15);
+}

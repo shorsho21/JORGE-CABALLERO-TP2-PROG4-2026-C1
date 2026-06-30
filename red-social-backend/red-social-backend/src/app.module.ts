@@ -5,7 +5,7 @@ import { MongooseModule } from '@nestjs/mongoose';
 import { UsersModule } from './users/users.module';
 import { AuthModule } from './auth/auth.module';
 import { PostsModule } from './posts/posts.module';
-
+import { CommentsModule } from './comments/comments.module';
 @Module({
   imports: [
     //hace que las variable de entorno del .env esten disponibles en la app
@@ -18,6 +18,7 @@ import { PostsModule } from './posts/posts.module';
     UsersModule,
     AuthModule,
     PostsModule,
+    CommentsModule,
   ],
 })
 export class AppModule {}

@@ -1,19 +1,8 @@
 <div class="container-fluid py-4 bg-dark min-vh-100">
-
   <!-- Navbar -->
-  <div class="container mb-4">
-    <div class="d-flex justify-content-between align-items-center text-white">
-      <h4 class="fw-light m-0">Red Social — Panel Admin</h4>
-      <div class="d-flex gap-3">
-        <a routerLink="/posts" class="text-white text-decoration-none">Inicio</a>
-        <a routerLink="/profile" class="text-white text-decoration-none">Perfil</a>
-        <a routerLink="/login" class="text-white text-decoration-none">Salir</a>
-      </div>
-    </div>
-  </div>
+  <app-navbar />
 
   <div class="container">
-
     <h5 class="text-white mb-4">Gestión de usuarios</h5>
 
     <!-- Spinner -->
@@ -44,24 +33,30 @@
               @for (usuario of usuarios; track usuario._id) {
                 <tr>
                   <td>
-                    <img [src]="usuario.imagenPerfil || 'https://i.pravatar.cc/40'"
-                         class="rounded-circle"
-                         style="width: 40px; height: 40px; object-fit: cover;">
+                    <img
+                      [src]="usuario.imagenPerfil || 'https://i.pravatar.cc/40'"
+                      class="rounded-circle"
+                      style="width: 40px; height: 40px; object-fit: cover"
+                    />
                   </td>
                   <td>{{ usuario.nombre }} {{ usuario.apellido }}</td>
                   <td>@{{ usuario.username }}</td>
                   <td>{{ usuario.email }}</td>
                   <td>
-                    <span class="badge"
-                          [class.bg-danger]="usuario.perfil === 'administrador'"
-                          [class.bg-secondary]="usuario.perfil === 'usuario'">
+                    <span
+                      class="badge"
+                      [class.bg-danger]="usuario.perfil === 'administrador'"
+                      [class.bg-secondary]="usuario.perfil === 'usuario'"
+                    >
                       {{ usuario.perfil }}
                     </span>
                   </td>
                   <td>
-                    <select class="form-select form-select-sm"
-                            [value]="usuario.perfil"
-                            (change)="updateRol(usuario._id, $any($event.target).value)">
+                    <select
+                      class="form-select form-select-sm"
+                      [value]="usuario.perfil"
+                      (change)="updateRol(usuario._id, $any($event.target).value)"
+                    >
                       <option value="usuario">usuario</option>
                       <option value="administrador">administrador</option>
                     </select>
@@ -73,6 +68,5 @@
         </div>
       </div>
     }
-
   </div>
 </div>

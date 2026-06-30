@@ -1,7 +1,10 @@
+// src/app/pages/login/login.ts
+
 import { Component, inject } from '@angular/core';
 import { ReactiveFormsModule, FormBuilder, FormGroup, Validators } from '@angular/forms';
 import { Router, RouterLink } from '@angular/router';
 import { AuthService } from '../../services/auth.service';
+import { SessionService } from '../../services/session.service';
 
 @Component({
   selector: 'app-login',
@@ -10,17 +13,16 @@ import { AuthService } from '../../services/auth.service';
   templateUrl: './login.html',
   styleUrl: './login.css',
 })
-//inicio la clase
 export class Login {
-  //inyecto los servicios necesarios
   private fb = inject(FormBuilder);
   private router = inject(Router);
   private authService = inject(AuthService);
-  //inicio las variables para el modal
+  private sessionService = inject(SessionService);
+
   showModal = false;
   modalMessage = '';
   modalType: 'success' | 'error' = 'success';
-  //inicio el formulario reactivo:
+
   form: FormGroup = this.fb.group({
     identifier: ['', Validators.required],
     password: [
@@ -38,7 +40,7 @@ export class Login {
   closeModal() {
     this.showModal = false;
   }
-  //si form es invalido, muestra un modal de error, si no, llama al service login
+
   login() {
     if (this.form.invalid) {
       this.openModal('Completa los campos correctamente', 'error');
@@ -49,12 +51,19 @@ export class Login {
 
     this.authService.login(identifier, password).subscribe({
       next: (res: any) => {
-        localStorage.setItem('user', JSON.stringify(res.user));
+        // Guardamos token y usuario en localStorage
         localStorage.setItem('token', res.token);
+        localStorage.setItem('user', JSON.stringify(res.user));
+
+        // Iniciamos el timer de sesión usando el callback que App registró previamente
+        // reiniciarConCallbackActual() reutiliza el callback del modal que ya tiene guardado
+        // así no necesitamos acceder a App directamente desde acá
+        this.sessionService.reiniciarConCallbackActual();
+
         this.openModal('Inicio de sesión exitoso 🎉', 'success');
         setTimeout(() => {
           this.closeModal();
-          this.router.navigate(['/profile']);
+          this.router.navigate(['/posts']);
         }, 1500);
       },
       error: (err) => {
