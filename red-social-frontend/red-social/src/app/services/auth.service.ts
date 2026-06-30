@@ -1,5 +1,3 @@
-// src/app/services/auth.service.ts ← ya existe, reemplazás el contenido
-
 import { inject, Injectable } from '@angular/core';
 import { HttpClient, HttpHeaders } from '@angular/common/http';
 import { environment } from '../../environments/environment';

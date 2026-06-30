@@ -1,5 +1,3 @@
-// src/app/app.ts
-
 import { Component, inject, OnInit, ChangeDetectorRef } from '@angular/core';
 import { Router, RouterOutlet } from '@angular/router';
 import { AuthService } from './services/auth.service';
@@ -14,7 +12,7 @@ import { SessionService } from './services/session.service';
 export class App implements OnInit {
   private authService = inject(AuthService);
   private router = inject(Router);
-  private cdr = inject(ChangeDetectorRef); // 👈 agregado
+  private cdr = inject(ChangeDetectorRef); // para forzar la deteccion de cambios
 
   sessionService = inject(SessionService);
   cargando = true;
@@ -24,6 +22,7 @@ export class App implements OnInit {
     this.validarSesion();
   }
 
+  //metodo que valida si hay un token en localstorage. Si no hay token, redirige al login
   validarSesion() {
     const token = localStorage.getItem('token');
 
@@ -37,14 +36,14 @@ export class App implements OnInit {
     this.authService.autorizar().subscribe({
       next: (res: any) => {
         localStorage.setItem('user', JSON.stringify(res.user));
-        this.cargando = false;         // 👈 primero apagamos el spinner
-        this.cdr.detectChanges();      // 👈 forzamos que Angular lo refleje en el DOM
-
+        this.cargando = false;         // primero apagamos el spinner
+        this.cdr.detectChanges();      // forzamos que Angular lo refleje en el DOM
+        //inicia la sesion y el contador de tiempo de la sesion.
         this.sessionService.iniciarSesion(() => {
           this.mostrarModalSesion = true;
           this.cdr.detectChanges();
         });
-
+        //si estas en login o la raiz, redirige a posts
         const rutaActual = this.router.url;
         if (rutaActual === '/' || rutaActual === '/login') {
           this.router.navigate(['/posts']);
@@ -61,6 +60,7 @@ export class App implements OnInit {
     });
   }
 
+  //metodo que extiende la sesion y cierra el modal
   extenderSesion() {
     this.sessionService.extenderSesion(() => {
       this.mostrarModalSesion = false;
