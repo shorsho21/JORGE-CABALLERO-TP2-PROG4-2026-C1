@@ -1,6 +1,4 @@
-// src/app/pages/login/login.ts
-
-import { Component, inject } from '@angular/core';
+import { Component, inject, ChangeDetectorRef } from '@angular/core';
 import { ReactiveFormsModule, FormBuilder, FormGroup, Validators } from '@angular/forms';
 import { Router, RouterLink } from '@angular/router';
 import { AuthService } from '../../services/auth.service';
@@ -18,10 +16,12 @@ export class Login {
   private router = inject(Router);
   private authService = inject(AuthService);
   private sessionService = inject(SessionService);
+  private cdr = inject(ChangeDetectorRef); // 👈 agregado
 
   showModal = false;
   modalMessage = '';
   modalType: 'success' | 'error' = 'success';
+  loading = false;
 
   form: FormGroup = this.fb.group({
     identifier: ['', Validators.required],
@@ -35,10 +35,12 @@ export class Login {
     this.modalMessage = message;
     this.modalType = type;
     this.showModal = true;
+    this.cdr.detectChanges(); // 👈 forzamos que Angular actualice la vista
   }
 
   closeModal() {
     this.showModal = false;
+    this.cdr.detectChanges(); // 👈 ídem al cerrar
   }
 
   login() {
@@ -47,19 +49,18 @@ export class Login {
       return;
     }
 
+    this.loading = true;
+    this.cdr.detectChanges(); // 👈 forzamos que el spinner aparezca inmediatamente
+
     const { identifier, password } = this.form.value;
 
     this.authService.login(identifier, password).subscribe({
       next: (res: any) => {
-        // Guardamos token y usuario en localStorage
         localStorage.setItem('token', res.token);
         localStorage.setItem('user', JSON.stringify(res.user));
-
-        // Iniciamos el timer de sesión usando el callback que App registró previamente
-        // reiniciarConCallbackActual() reutiliza el callback del modal que ya tiene guardado
-        // así no necesitamos acceder a App directamente desde acá
         this.sessionService.reiniciarConCallbackActual();
 
+        this.loading = false;
         this.openModal('Inicio de sesión exitoso 🎉', 'success');
         setTimeout(() => {
           this.closeModal();
@@ -67,6 +68,13 @@ export class Login {
         }, 1500);
       },
       error: (err) => {
+        this.loading = false;
+
+        if (err.status === 403) {
+          this.openModal(err.error?.message || 'Tu cuenta está deshabilitada.', 'error');
+          return;
+        }
+
         this.openModal(err.error?.message || 'Credenciales incorrectas', 'error');
       },
     });

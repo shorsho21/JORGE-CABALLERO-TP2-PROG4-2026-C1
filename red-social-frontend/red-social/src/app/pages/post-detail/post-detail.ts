@@ -6,10 +6,11 @@ import { FormsModule } from '@angular/forms';
 import { DatePipe } from '@angular/common';
 import { AuthService } from '../../services/auth.service';
 import { Navbar } from '../../components/navbar/navbar';
+import { TiempoRelativoPipe } from '../../pipes/tiempo-relativo.pipe';
 @Component({
   selector: 'app-post-detail',
   standalone: true,
-  imports: [ FormsModule, DatePipe, Navbar],
+  imports: [ FormsModule, DatePipe, Navbar, TiempoRelativoPipe],
   templateUrl: './post-detail.html',
   styleUrl: './post-detail.css',
 })

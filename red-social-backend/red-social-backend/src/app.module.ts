@@ -6,6 +6,7 @@ import { UsersModule } from './users/users.module';
 import { AuthModule } from './auth/auth.module';
 import { PostsModule } from './posts/posts.module';
 import { CommentsModule } from './comments/comments.module';
+import { StatsModule } from './stats/stats.module';
 @Module({
   imports: [
     //hace que las variable de entorno del .env esten disponibles en la app
@@ -19,6 +20,7 @@ import { CommentsModule } from './comments/comments.module';
     AuthModule,
     PostsModule,
     CommentsModule,
+    StatsModule,
   ],
 })
 export class AppModule {}

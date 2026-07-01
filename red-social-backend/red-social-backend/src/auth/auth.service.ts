@@ -1,6 +1,4 @@
-// src/auth/auth.service.ts ← ya existe, reemplazás el contenido
-
-import { Injectable, UnauthorizedException } from '@nestjs/common';
+import { Injectable, UnauthorizedException, ForbiddenException } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { JwtService } from '@nestjs/jwt';
 import { Model } from 'mongoose';
@@ -16,9 +14,7 @@ export class AuthService {
   ) {}
 
   // ── LOGIN ─────────────────────────────────────────────────────────────────
-  // Valida email/username y password, devuelve token + datos del usuario
   async login(email: string, password: string) {
-    // Buscamos por email o username para que el usuario pueda usar cualquiera de los dos
     const user = await this.userModel.findOne({
       $or: [{ email }, { username: email }],
     });
@@ -27,18 +23,22 @@ export class AuthService {
       throw new UnauthorizedException('Usuario no encontrado');
     }
 
-    // Comparamos la password ingresada contra el hash guardado en la base de datos
+    // Verificamos si el usuario está habilitado ANTES de chequear la contraseña
+    // Así el mensaje es específico: sabe que su cuenta fue deshabilitada
+    // y no confunde con credenciales incorrectas
+    if (!user.habilitado) {
+      throw new ForbiddenException(
+        'Tu cuenta ha sido deshabilitada. Contactá al administrador.',
+      );
+    }
+
     const isPasswordValid = await bcrypt.compare(password, user.password);
 
     if (!isPasswordValid) {
       throw new UnauthorizedException('Contraseña incorrecta');
     }
 
-    // Generamos el token con el payload actualizado
-    // Este payload es lo que va a estar disponible en req.user en los controllers
     const token = this.generarToken(user);
-
-    // Devolvemos el usuario sin la password por seguridad
     const { password: _, ...userWithoutPassword } = user.toObject();
 
     return {
@@ -49,13 +49,10 @@ export class AuthService {
   }
 
   // ── AUTORIZAR ─────────────────────────────────────────────────────────────
-  // Valida que el token sea correcto y devuelve los datos del usuario
-  // Este método lo llama el controller después de que el JwtAuthGuard ya validó el token
-  // Si el token es inválido, el guard tira 401 antes de llegar acá
   async autorizar(userFromToken: any) {
-    // userFromToken viene del JwtStrategy.validate() — ya tiene los datos del payload
-    // Buscamos el usuario en la base de datos para devolver datos frescos
-    const user = await this.userModel.findById(userFromToken.userId).select('-password');
+    const user = await this.userModel
+      .findById(userFromToken.userId)
+      .select('-password');
 
     if (!user) {
       throw new UnauthorizedException('Usuario no encontrado');
@@ -68,17 +65,13 @@ export class AuthService {
   }
 
   // ── REFRESCAR ─────────────────────────────────────────────────────────────
-  // Recibe un token válido y devuelve uno nuevo con el mismo payload y 15 min más
-  // El guard ya validó que el token sea correcto antes de llegar acá
   async refrescar(userFromToken: any) {
-    // Buscamos el usuario para tener los datos actualizados en el nuevo token
     const user = await this.userModel.findById(userFromToken.userId);
 
     if (!user) {
       throw new UnauthorizedException('Usuario no encontrado');
     }
 
-    // Generamos un token nuevo con los mismos datos — el vencimiento se renueva automáticamente
     const token = this.generarToken(user);
 
     return {
@@ -88,14 +81,12 @@ export class AuthService {
   }
 
   // ── HELPER PRIVADO ────────────────────────────────────────────────────────
-  // Centraliza la generación del token para no repetir el payload en cada método
-  // Si en el futuro hay que agregar algo al payload, se cambia en un solo lugar
   private generarToken(user: any): string {
     const payload = {
-      sub: user._id,           // id único del usuario (estándar JWT usar "sub" para esto)
+      sub: user._id,
       email: user.email,
-      username: user.username,  // 👈 agregamos username al payload
-      perfil: user.perfil,      // rol: 'usuario' o 'administrador'
+      username: user.username,
+      perfil: user.perfil,
     };
 
     return this.jwtService.sign(payload);

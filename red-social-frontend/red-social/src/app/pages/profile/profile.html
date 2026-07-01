@@ -76,10 +76,10 @@
               {{ post.titulo }}
             </h6>
             <p class="mb-2" style="color: #666; font-size: 0.78rem">
-              {{ post.createdAt | date: 'dd MMM yyyy · HH:mm' }}
+              {{ post.createdAt | tiempoRelativo }}
             </p>
             <p style="color: #bbb; font-size: 0.88rem; line-height: 1.6; margin-bottom: 0">
-              {{ post.descripcion }}
+              {{ post.descripcion | truncar: 150 }}
             </p>
           </div>
 

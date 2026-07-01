@@ -60,8 +60,18 @@
         </div>
 
         <!-- BUTTON -->
-        <button class="btn btn-dark w-100 py-2" (click)="login()" [disabled]="form.invalid">
-          Iniciar sesión
+        <!-- BUTTON -->
+        <button
+          class="btn btn-dark w-100 py-2"
+          (click)="login()"
+          [disabled]="form.invalid || loading"
+        >
+          @if (loading) {
+            <span class="spinner-border spinner-border-sm me-2" role="status"></span>
+            Ingresando...
+          } @else {
+            Iniciar sesión
+          }
         </button>
       </form>
 
