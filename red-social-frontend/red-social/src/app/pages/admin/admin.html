@@ -52,7 +52,12 @@
                   class="form-control"
                   placeholder="Nombre"
                   formControlName="nombre"
-                  style="background: #252525; border: 1px solid #333; color: #fff; border-radius: 10px"
+                  style="
+                    background: #252525;
+                    border: 1px solid #333;
+                    color: #fff;
+                    border-radius: 10px;
+                  "
                 />
               </div>
               <div class="col-md-6">
@@ -61,7 +66,12 @@
                   class="form-control"
                   placeholder="Apellido"
                   formControlName="apellido"
-                  style="background: #252525; border: 1px solid #333; color: #fff; border-radius: 10px"
+                  style="
+                    background: #252525;
+                    border: 1px solid #333;
+                    color: #fff;
+                    border-radius: 10px;
+                  "
                 />
               </div>
               <div class="col-md-6">
@@ -70,7 +80,12 @@
                   class="form-control"
                   placeholder="Email"
                   formControlName="email"
-                  style="background: #252525; border: 1px solid #333; color: #fff; border-radius: 10px"
+                  style="
+                    background: #252525;
+                    border: 1px solid #333;
+                    color: #fff;
+                    border-radius: 10px;
+                  "
                 />
               </div>
               <div class="col-md-6">
@@ -79,7 +94,12 @@
                   class="form-control"
                   placeholder="Username"
                   formControlName="username"
-                  style="background: #252525; border: 1px solid #333; color: #fff; border-radius: 10px"
+                  style="
+                    background: #252525;
+                    border: 1px solid #333;
+                    color: #fff;
+                    border-radius: 10px;
+                  "
                 />
               </div>
               <div class="col-md-6">
@@ -88,7 +108,12 @@
                   class="form-control"
                   placeholder="Contraseña"
                   formControlName="password"
-                  style="background: #252525; border: 1px solid #333; color: #fff; border-radius: 10px"
+                  style="
+                    background: #252525;
+                    border: 1px solid #333;
+                    color: #fff;
+                    border-radius: 10px;
+                  "
                 />
               </div>
               <div class="col-md-6">
@@ -96,7 +121,12 @@
                   type="date"
                   class="form-control"
                   formControlName="fechaNacimiento"
-                  style="background: #252525; border: 1px solid #333; color: #fff; border-radius: 10px"
+                  style="
+                    background: #252525;
+                    border: 1px solid #333;
+                    color: #fff;
+                    border-radius: 10px;
+                  "
                 />
               </div>
               <div class="col-12">
@@ -105,7 +135,12 @@
                   class="form-control"
                   placeholder="Descripción (opcional)"
                   formControlName="descripcion"
-                  style="background: #252525; border: 1px solid #333; color: #fff; border-radius: 10px"
+                  style="
+                    background: #252525;
+                    border: 1px solid #333;
+                    color: #fff;
+                    border-radius: 10px;
+                  "
                 />
               </div>
 
@@ -145,6 +180,72 @@
                 Crear usuario
               </button>
             </div>
+            <!-- Imagen de perfil (opcional) -->
+            <div class="col-12">
+              <div class="d-flex align-items-center gap-3">
+                <!-- Preview de la imagen — aparece cuando el admin elige una -->
+                @if (previewUsuario) {
+                  <img
+                    [src]="previewUsuario"
+                    class="rounded-circle"
+                    style="width: 56px; height: 56px; object-fit: cover; border: 2px solid #444"
+                  />
+                } @else {
+                  <!-- Placeholder cuando no hay imagen elegida -->
+                  <div
+                    class="rounded-circle d-flex align-items-center justify-content-center"
+                    style="
+                      width: 56px;
+                      height: 56px;
+                      background: #252525;
+                      border: 2px dashed #444;
+                      color: #555;
+                      font-size: 1.2rem;
+                      flex-shrink: 0;
+                    "
+                  >
+                    👤
+                  </div>
+                }
+
+                <!-- Botón para elegir imagen -->
+                <label
+                  class="d-flex align-items-center gap-2 px-3 py-2 rounded-3"
+                  style="background: #252525; cursor: pointer; border: 1px solid #333"
+                >
+                  <span style="font-size: 1rem">🖼️</span>
+                  <span style="color: #aaa; font-size: 0.85rem">
+                    {{
+                      selectedFileUsuario ? selectedFileUsuario.name : 'Imagen de perfil (opcional)'
+                    }}
+                  </span>
+                  <input
+                    type="file"
+                    class="d-none"
+                    accept="image/*"
+                    (change)="onFileUsuarioChange($event)"
+                  />
+                </label>
+
+                <!-- Botón para quitar la imagen elegida -->
+                @if (previewUsuario) {
+                  <button
+                    type="button"
+                    class="btn btn-sm"
+                    (click)="previewUsuario = null; selectedFileUsuario = null"
+                    style="
+                      color: #ef4444;
+                      border: 1px solid #3a1a1a;
+                      border-radius: 20px;
+                      font-size: 0.78rem;
+                      padding: 3px 12px;
+                    "
+                  >
+                    Quitar
+                  </button>
+                }
+              </div>
+            </div>
           </form>
         </div>
       }
@@ -158,7 +259,6 @@
 
       <!-- Lista de usuarios -->
       @for (usuario of usuarios; track usuario._id) {
-
         <!-- 👈 Directiva resaltarDeshabilitado en el div principal -->
         <div
           class="mb-2 p-3 rounded-4 d-flex justify-content-between align-items-center"
@@ -186,7 +286,7 @@
               <span
                 [appClickCopiar]="usuario.email"
                 [appTooltip]="'Clic para copiar email'"
-                style="color: #555; font-size: 0.75rem; cursor: pointer;"
+                style="color: #555; font-size: 0.75rem; cursor: pointer"
               >
                 {{ usuario.email }}
               </span>
@@ -201,7 +301,13 @@
                 class="btn btn-sm"
                 (click)="deshabilitar(usuario._id)"
                 [appTooltip]="'Deshabilitar acceso de ' + usuario.username"
-                style="color: #ef4444; border: 1px solid #3a1a1a; border-radius: 20px; padding: 3px 14px; font-size: 0.78rem"
+                style="
+                  color: #ef4444;
+                  border: 1px solid #3a1a1a;
+                  border-radius: 20px;
+                  padding: 3px 14px;
+                  font-size: 0.78rem;
+                "
               >
                 Deshabilitar
               </button>
@@ -211,7 +317,13 @@
                 class="btn btn-sm"
                 (click)="rehabilitar(usuario._id)"
                 [appTooltip]="'Rehabilitar acceso de ' + usuario.username"
-                style="color: #34d399; border: 1px solid #1a3a2a; border-radius: 20px; padding: 3px 14px; font-size: 0.78rem"
+                style="
+                  color: #34d399;
+                  border: 1px solid #1a3a2a;
+                  border-radius: 20px;
+                  padding: 3px 14px;
+                  font-size: 0.78rem;
+                "
               >
                 Rehabilitar
               </button>
@@ -277,7 +389,7 @@
 
       <!-- Gráfico de torta -->
       <div class="mb-4 p-4 rounded-4" style="background: #1a1a1a; border: 1px solid #2a2a2a">
-        <h6 class="text-white mb-3" style="font-size: 0.95rem">Comentarios por publicación</h6>
+        <h6 class="text-white mb-3" style="font-size: 0.95rem">Comentarios total recibidos</h6>
         <canvas #chartTorta style="max-height: 350px"></canvas>
       </div>
     }

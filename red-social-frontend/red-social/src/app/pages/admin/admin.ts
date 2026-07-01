@@ -60,7 +60,8 @@ export class Admin implements OnInit, OnDestroy, AfterViewInit {
   usuarios: any[] = [];
   mostrarFormUsuario = false;
   loadingUsuario = false;
-
+  selectedFileUsuario: File | null = null;
+  previewUsuario: string | null = null;
   // Modal de feedback
   showModal = false;
   modalMessage = '';
@@ -156,6 +157,10 @@ export class Admin implements OnInit, OnDestroy, AfterViewInit {
     Object.keys(valores).forEach((key) => {
       if (valores[key]) formData.append(key, valores[key]);
     });
+    // 👈 agregamos la imagen si el admin eligió una
+    if (this.selectedFileUsuario) {
+      formData.append('file', this.selectedFileUsuario);
+    }
 
     this.authService.createUser(formData).subscribe({
       next: () => {
@@ -163,6 +168,8 @@ export class Admin implements OnInit, OnDestroy, AfterViewInit {
         this.formUsuario.reset({ perfil: 'usuario' });
         this.mostrarFormUsuario = false;
         this.loadingUsuario = false;
+        this.selectedFileUsuario = null;
+        this.previewUsuario = null;
         this.cargarUsuarios();
         this.cdr.detectChanges();
       },
@@ -334,7 +341,8 @@ export class Admin implements OnInit, OnDestroy, AfterViewInit {
     this.chartTorta = new Chart(ctx, {
       type: 'doughnut',
       data: {
-        labels: data.map((d) => d.titulo),
+        // 👈 ahora usamos username en lugar de titulo
+        labels: data.map((d) => `@${d.username}`),
         datasets: [
           {
             data: data.map((d) => d.total),
@@ -389,5 +397,21 @@ export class Admin implements OnInit, OnDestroy, AfterViewInit {
     const d = new Date();
     d.setMonth(d.getMonth() - meses);
     return d.toISOString().split('T')[0];
+  }
+
+  onFileUsuarioChange(event: Event) {
+    const input = event.target as HTMLInputElement;
+    if (input.files?.length) {
+      this.selectedFileUsuario = input.files[0];
+
+      // Generamos una URL temporal para previsualizar la imagen
+      // sin necesidad de subirla al servidor todavía
+      const reader = new FileReader();
+      reader.onload = (e: any) => {
+        this.previewUsuario = e.target.result;
+        this.cdr.detectChanges();
+      };
+      reader.readAsDataURL(this.selectedFileUsuario);
+    }
   }
 }

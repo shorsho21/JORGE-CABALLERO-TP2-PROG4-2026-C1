@@ -3,7 +3,6 @@ import {
   Input,
   HostListener,
   ElementRef,
-  Renderer2,
 } from '@angular/core';
 
 @Directive({
@@ -11,38 +10,60 @@ import {
   standalone: true,
 })
 export class ClickCopiarDirective {
-  // Texto a copiar al portapapeles
   @Input() appClickCopiar = '';
 
-  constructor(
-    private el: ElementRef,
-    private renderer: Renderer2,
-  ) {}
+  private feedbackEl: HTMLElement | null = null;
+
+  constructor(private el: ElementRef) {}
 
   @HostListener('click')
   async onClick() {
     if (!this.appClickCopiar) return;
 
     try {
-      // Usamos la API moderna del navegador para copiar
       await navigator.clipboard.writeText(this.appClickCopiar);
-
-      // Feedback visual: cambiamos el texto del elemento brevemente
-      const textoOriginal = this.el.nativeElement.innerText;
-      this.renderer.setProperty(this.el.nativeElement, 'innerText', '¡Copiado!');
-      this.renderer.setStyle(this.el.nativeElement, 'color', '#34d399');
-
-      // Volvemos al texto original después de 1.5 segundos
-      setTimeout(() => {
-        this.renderer.setProperty(
-          this.el.nativeElement,
-          'innerText',
-          textoOriginal,
-        );
-        this.renderer.setStyle(this.el.nativeElement, 'color', '');
-      }, 1500);
+      this.mostrarFeedback();
     } catch {
       console.error('No se pudo copiar al portapapeles');
     }
+  }
+
+  private mostrarFeedback() {
+    // Si ya hay un feedback visible lo removemos antes de crear uno nuevo
+    if (this.feedbackEl) {
+      document.body.removeChild(this.feedbackEl);
+      this.feedbackEl = null;
+    }
+
+    // Creamos el feedback en el body, no dentro del elemento
+    this.feedbackEl = document.createElement('span');
+    this.feedbackEl.innerText = '¡Copiado!';
+
+    Object.assign(this.feedbackEl.style, {
+      position: 'fixed',
+      background: '#1a3a2a',
+      color: '#34d399',
+      padding: '4px 10px',
+      borderRadius: '6px',
+      fontSize: '0.75rem',
+      whiteSpace: 'nowrap',
+      zIndex: '9999',
+      pointerEvents: 'none',
+    });
+
+    document.body.appendChild(this.feedbackEl);
+
+    // Lo posicionamos debajo del elemento
+    const rect = this.el.nativeElement.getBoundingClientRect();
+    this.feedbackEl.style.top = `${rect.bottom + 6}px`;
+    this.feedbackEl.style.left = `${rect.left}px`;
+
+    // Lo removemos después de 1.5 segundos
+    setTimeout(() => {
+      if (this.feedbackEl) {
+        document.body.removeChild(this.feedbackEl);
+        this.feedbackEl = null;
+      }
+    }, 1500);
   }
 }

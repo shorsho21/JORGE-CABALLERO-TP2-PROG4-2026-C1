@@ -98,48 +98,58 @@ export class StatsService {
   // Cuenta cuántos comentarios tiene cada publicación en el rango de fechas
   // Devuelve el título de la publicación para la etiqueta del gráfico de torta
   async comentariosPorPublicacion(desde: string, hasta: string) {
-    const fechaDesde = new Date(desde);
-    const fechaHasta = new Date(hasta);
-    fechaHasta.setHours(23, 59, 59, 999);
+  const fechaDesde = new Date(desde);
+  const fechaHasta = new Date(hasta);
+  fechaHasta.setHours(23, 59, 59, 999);
 
-    return this.commentModel.aggregate([
-      // Etapa 1: filtrar comentarios por rango de fechas
-      {
-        $match: {
-          createdAt: { $gte: fechaDesde, $lte: fechaHasta },
-        },
+  return this.commentModel.aggregate([
+    // Etapa 1: filtrar comentarios por rango de fechas
+    {
+      $match: {
+        createdAt: { $gte: fechaDesde, $lte: fechaHasta },
       },
-      // Etapa 2: agrupar por publicación y contar comentarios
-      {
-        $group: {
-          _id: '$publicacionId',
-          total: { $sum: 1 },
-        },
+    },
+    // Etapa 2: join con posts para obtener el autor de cada publicación
+    {
+      $lookup: {
+        from: 'posts',
+        localField: 'publicacionId',
+        foreignField: '_id',
+        as: 'postData',
       },
-      // Etapa 3: join con posts para obtener el título de cada publicación
-      {
-        $lookup: {
-          from: 'posts',
-          localField: '_id',
-          foreignField: '_id',
-          as: 'postData',
-        },
+    },
+    { $unwind: '$postData' },
+    // Etapa 3: excluimos publicaciones eliminadas
+    {
+      $match: { 'postData.eliminado': false },
+    },
+    // Etapa 4: join con users para obtener el username del autor
+    {
+      $lookup: {
+        from: 'users',
+        localField: 'postData.autor',
+        foreignField: '_id',
+        as: 'autorData',
       },
-      { $unwind: '$postData' },
-      // Etapa 4: solo incluir publicaciones que no estén eliminadas
-      {
-        $match: { 'postData.eliminado': false },
+    },
+    { $unwind: '$autorData' },
+    // Etapa 5: agrupamos por autor y sumamos todos sus comentarios
+    {
+      $group: {
+        _id: '$autorData._id',
+        username: { $first: '$autorData.username' },
+        total: { $sum: 1 },
       },
-      // Etapa 5: dar forma final a la respuesta
-      {
-        $project: {
-          _id: 0,
-          publicacionId: '$_id',
-          titulo: '$postData.titulo',
-          total: 1,
-        },
+    },
+    // Etapa 6: forma final de la respuesta
+    {
+      $project: {
+        _id: 0,
+        username: 1,
+        total: 1,
       },
-      { $sort: { total: -1 } },
-    ]);
-  }
+    },
+    { $sort: { total: -1 } },
+  ]);
+}
 }
