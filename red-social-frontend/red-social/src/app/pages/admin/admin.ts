@@ -72,7 +72,7 @@ export class Admin implements OnInit, OnDestroy, AfterViewInit {
     apellido: ['', Validators.required],
     email: ['', [Validators.required, Validators.email]],
     username: ['', Validators.required],
-    password: ['', [Validators.required, Validators.minLength(6)]],
+    password: ['', [Validators.required, Validators.minLength(8)],Validators.pattern(/(?=.*[A-Z])(?=.*\d)/)],
     fechaNacimiento: ['', Validators.required],
     descripcion: [''],
     // Radio button para elegir el perfil del nuevo usuario

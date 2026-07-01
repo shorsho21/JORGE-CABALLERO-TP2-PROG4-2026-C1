@@ -115,6 +115,25 @@
                     border-radius: 10px;
                   "
                 />
+                @if (formUsuario.get('password')?.invalid && formUsuario.get('password')?.touched) {
+                  <div class="ps-2 mt-1 d-flex flex-column gap-1">
+                    @if (formUsuario.get('password')?.hasError('required')) {
+                      <small style="color: #ef4444; font-size: 0.78rem"
+                        >⚠️ La contraseña es obligatoria.</small
+                      >
+                    }
+                    @if (formUsuario.get('password')?.hasError('minlength')) {
+                      <small style="color: #ef4444; font-size: 0.78rem"
+                        >⚠️ Debe tener al menos 8 caracteres.</small
+                      >
+                    }
+                    @if (formUsuario.get('password')?.hasError('pattern')) {
+                      <small style="color: #ef4444; font-size: 0.78rem"
+                        >⚠️ Debe incluir al menos una mayúscula y un número.</small
+                      >
+                    }
+                  </div>
+                }
               </div>
               <div class="col-md-6">
                 <input
