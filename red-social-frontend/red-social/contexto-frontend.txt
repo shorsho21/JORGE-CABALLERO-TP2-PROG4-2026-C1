@@ -1,0 +1,2028 @@
+===== ./src/app/app.config.ts =====
+// src/app/app.config.ts ← ya existe, reemplazás el contenido
+
+import { ApplicationConfig, provideBrowserGlobalErrorListeners } from '@angular/core';
+import { provideRouter } from '@angular/router';
+import { provideHttpClient, withInterceptors } from '@angular/common/http'; // 👈 agregamos withInterceptors
+import { routes } from './app.routes';
+import { authInterceptor } from './interceptors/auth.interceptor'; // 👈 importamos el interceptor
+
+export const appConfig: ApplicationConfig = {
+  providers: [
+    provideBrowserGlobalErrorListeners(),
+    provideRouter(routes),
+    // withInterceptors registra el interceptor para que se aplique a todas las peticiones HTTP
+    provideHttpClient(withInterceptors([authInterceptor])),
+  ],
+};
+===== ./src/app/app.html =====
+<!-- Spinner de inicio mientras validamos el token -->
+@if (cargando) {
+  <div class="d-flex justify-content-center align-items-center vh-100 bg-dark">
+    <div class="text-center text-white">
+      <div class="spinner-border mb-3" role="status">
+        <span class="visually-hidden">Cargando...</span>
+      </div>
+      <p class="fw-light opacity-75">Verificando sesión...</p>
+    </div>
+  </div>
+}
+
+<!-- Contenido de la app una vez validado el token -->
+@if (!cargando) {
+  <router-outlet />
+}
+
+<!-- Modal de extensión de sesión -->
+<!-- Vive acá arriba de todo para estar disponible en cualquier página -->
+@if (mostrarModalSesion) {
+  <div class="modal d-block" tabindex="-1" style="background: rgba(0,0,0,0.6)">
+    <div class="modal-dialog modal-dialog-centered">
+      <div class="modal-content">
+
+        <div class="modal-header bg-warning">
+          <h5 class="modal-title text-dark">⚠️ Tu sesión está por vencer</h5>
+        </div>
+
+        <div class="modal-body">
+          <p class="mb-0">
+            Tu sesión expira en <strong>5 minutos</strong>.
+            ¿Querés extenderla?
+          </p>
+        </div>
+
+        <div class="modal-footer">
+          <!-- Rechazar → cierra sesión inmediatamente -->
+          <button
+            class="btn btn-outline-secondary"
+            (click)="rechazarExtension()"
+          >
+            No, cerrar sesión
+          </button>
+          <!-- Aceptar → refresca el token y reinicia el timer -->
+          <button
+            class="btn btn-dark"
+            (click)="extenderSesion()"
+          >
+            Sí, extender sesión
+          </button>
+        </div>
+
+      </div>
+    </div>
+  </div>
+}
+===== ./src/app/app.routes.ts =====
+// src/app/app.routes.ts ← reemplazás el contenido
+
+import { Routes } from '@angular/router';
+import { Login } from './pages/login/login';
+import { Register } from './pages/register/register';
+import { Posts } from './pages/posts/posts';
+import { Profile } from './pages/profile/profile';
+import { Admin } from './pages/admin/admin';
+import { PostDetail } from './pages/post-detail/post-detail';
+import { authGuard } from './guards/auth.guard';
+import { adminGuard } from './guards/admin.guard';
+import { guestGuard } from './guards/guest.guard';
+
+export const routes: Routes = [
+  { path: '', redirectTo: 'login', pathMatch: 'full' },
+
+  // Rutas públicas para invitados — bloqueadas si ya estás logueado
+  { path: 'login', component: Login, canActivate: [guestGuard] },
+  { path: 'register', component: Register, canActivate: [guestGuard] },
+
+  // Rutas privadas — requieren estar logueado
+  { path: 'posts', component: Posts, canActivate: [authGuard] },
+  { path: 'posts/:id', component: PostDetail, canActivate: [authGuard] },
+  { path: 'profile', component: Profile, canActivate: [authGuard] },
+
+  // Ruta privada + admin — requiere estar logueado Y ser administrador
+  { path: 'admin', component: Admin, canActivate: [authGuard, adminGuard] },
+];
+===== ./src/app/app.ts =====
+import { Component, inject, OnInit, ChangeDetectorRef } from '@angular/core';
+import { Router, RouterOutlet } from '@angular/router';
+import { AuthService } from './services/auth.service';
+import { SessionService } from './services/session.service';
+
+@Component({
+  selector: 'app-root',
+  imports: [RouterOutlet],
+  templateUrl: './app.html',
+  styleUrl: './app.css',
+})
+export class App implements OnInit {
+  private authService = inject(AuthService);
+  private router = inject(Router);
+  private cdr = inject(ChangeDetectorRef); // para forzar la deteccion de cambios
+
+  sessionService = inject(SessionService);
+  cargando = true;
+  mostrarModalSesion = false;
+
+  ngOnInit() {
+    this.validarSesion();
+  }
+
+  //metodo que valida si hay un token en localstorage. Si no hay token, redirige al login
+  validarSesion() {
+    const token = localStorage.getItem('token');
+
+    if (!token) {
+      this.cargando = false;
+      this.cdr.detectChanges();
+      this.router.navigate(['/login']);
+      return;
+    }
+
+    this.authService.autorizar().subscribe({
+      next: (res: any) => {
+        localStorage.setItem('user', JSON.stringify(res.user));
+        this.cargando = false;         // primero apagamos el spinner
+        this.cdr.detectChanges();      // forzamos que Angular lo refleje en el DOM
+        //inicia la sesion y el contador de tiempo de la sesion.
+        this.sessionService.iniciarSesion(() => {
+          this.mostrarModalSesion = true;
+          this.cdr.detectChanges();
+        });
+        //si estas en login o la raiz, redirige a posts
+        const rutaActual = this.router.url;
+        if (rutaActual === '/' || rutaActual === '/login') {
+          this.router.navigate(['/posts']);
+        }
+      },
+      error: (err) => {
+        console.log('Error al autorizar:', err);
+        localStorage.removeItem('token');
+        localStorage.removeItem('user');
+        this.cargando = false;
+        this.cdr.detectChanges();
+        this.router.navigate(['/login']);
+      },
+    });
+  }
+
+  //metodo que extiende la sesion y cierra el modal
+  extenderSesion() {
+    this.sessionService.extenderSesion(() => {
+      this.mostrarModalSesion = false;
+      this.cdr.detectChanges();
+    });
+  }
+
+  rechazarExtension() {
+    this.mostrarModalSesion = false;
+    this.sessionService.cerrarSesion();
+  }
+
+  registrarCallbackModal() {
+    this.sessionService.iniciarSesion(() => {
+      this.mostrarModalSesion = true;
+      this.cdr.detectChanges();
+    });
+  }
+}
+===== ./src/app/components/navbar/navbar.html =====
+<!-- src/app/components/navbar/navbar.html ← archivo nuevo -->
+
+<nav style="background: #111; border-bottom: 1px solid #222;" class="sticky-top">
+  <div class="container py-3" style="max-width: 680px;">
+    <div class="d-flex justify-content-between align-items-center">
+      <a routerLink="/posts" class="text-decoration-none">
+        <span class="fw-bold text-white fs-5">● RedSocial</span>
+      </a>
+      <div class="d-flex gap-4 align-items-center">
+        <a routerLink="/posts" class="text-decoration-none" style="color: #aaa; font-size: 0.9rem;">
+          Inicio
+        </a>
+        <a routerLink="/profile" class="text-decoration-none" style="color: #aaa; font-size: 0.9rem;">
+          Perfil
+        </a>
+        @if (esAdmin()) {
+          <a routerLink="/admin" class="text-decoration-none" style="color: #aaa; font-size: 0.9rem;">
+            Admin
+          </a>
+        }
+        <button
+          (click)="salir()"
+          class="btn btn-sm px-3 py-1 fw-semibold"
+          style="background: #222; color: #fff; border: 1px solid #333; border-radius: 20px; font-size: 0.85rem;"
+        >
+          Salir
+        </button>
+      </div>
+    </div>
+  </div>
+</nav>
+===== ./src/app/components/navbar/navbar.ts =====
+// src/app/components/navbar/navbar.ts ← archivo nuevo
+
+import { Component, inject, OnInit } from '@angular/core';
+import { Router, RouterLink } from '@angular/router';
+import { SessionService } from '../../services/session.service';
+
+@Component({
+  selector: 'app-navbar',
+  standalone: true,
+  imports: [RouterLink],
+  templateUrl: './navbar.html',
+  styleUrl: './navbar.css',
+})
+export class Navbar implements OnInit {
+  private router = inject(Router);
+  private sessionService = inject(SessionService);
+
+  // Usuario logueado, lo leemos del localStorage al cargar el navbar
+  currentUser: any = null;
+
+  ngOnInit() {
+    this.currentUser = JSON.parse(localStorage.getItem('user') || '{}');
+  }
+
+  // Devuelve true si el usuario logueado es administrador
+  // Lo usamos en el template para mostrar/ocultar el link de Admin
+  esAdmin(): boolean {
+    return this.currentUser?.perfil === 'administrador';
+  }
+
+  // Cierra la sesión: limpia timers, localStorage, y redirige al login
+  // Reutilizamos cerrarSesion() del SessionService para no duplicar lógica
+  // (es la misma función que usa el timer cuando la sesión expira sola)
+  salir() {
+    this.sessionService.cerrarSesion();
+  }
+}
+===== ./src/app/guards/admin.guard.ts =====
+import { inject } from '@angular/core';
+import { CanActivateFn, Router } from '@angular/router';
+
+export const adminGuard: CanActivateFn = () => {
+  const router = inject(Router);
+
+  const token = localStorage.getItem('token');
+  const user = JSON.parse(localStorage.getItem('user') || '{}');
+
+  // Primero chequeamos que haya token, igual que en authGuard
+  if (!token) {
+    router.navigate(['/login']);
+    return false;
+  }
+
+  // Después chequeamos el rol guardado en localStorage
+  // Este dato se actualiza cada vez que App.ngOnInit valida el token contra /auth/autorizar,
+  // así que siempre refleja el rol más reciente que confirmó el backend
+  if (user.perfil !== 'administrador') {
+    // No es admin → lo mandamos a posts en lugar de login, porque sí está logueado
+    router.navigate(['/posts']);
+    return false;
+  }
+
+  return true;
+};
+===== ./src/app/guards/auth.guard.ts =====
+import { inject } from '@angular/core';
+import { CanActivateFn, Router } from '@angular/router';
+
+// Los guards modernos en Angular son funciones, igual que los interceptores
+export const authGuard: CanActivateFn = () => {
+  const router = inject(Router);
+
+  const token = localStorage.getItem('token');
+
+  // Si hay token, dejamos pasar
+  // No validamos contra el backend acá porque sería una llamada extra en cada cambio de ruta
+  // Si el token está vencido, el interceptor lo va a detectar en la primera petición que falle
+  if (token) {
+    return true;
+  }
+
+  // Sin token, no dejamos pasar y redirigimos al login
+  router.navigate(['/login']);
+  return false;
+};
+===== ./src/app/guards/guest.guard.ts =====
+import { inject } from '@angular/core';
+import { CanActivateFn, Router } from '@angular/router';
+
+export const guestGuard: CanActivateFn = () => {
+  const router = inject(Router);
+
+  const token = localStorage.getItem('token');
+
+  // Si NO hay token, es un invitado → puede ver login/register normalmente
+  if (!token) {
+    return true;
+  }
+
+  // Si hay token, ya está logueado → no tiene sentido que vea el login otra vez
+  // lo mandamos directo a posts
+  router.navigate(['/posts']);
+  return false;
+};
+===== ./src/app/interceptors/auth.interceptor.ts =====
+// src/app/interceptors/auth.interceptor.ts  ← archivo nuevo
+
+import { HttpInterceptorFn } from '@angular/common/http';
+import { inject } from '@angular/core';
+import { Router } from '@angular/router';
+import { catchError, throwError } from 'rxjs';
+
+// Los interceptores en Angular moderno son funciones, no clases
+// Esta función se ejecuta automáticamente en CADA petición HTTP que haga la app
+export const authInterceptor: HttpInterceptorFn = (req, next) => {
+  // Inyectamos el router para poder redirigir si hay un 401
+  const router = inject(Router);
+
+  // Pasamos la petición al siguiente handler (que la ejecuta)
+  // y nos "enganchamos" al resultado para capturar errores
+  return next(req).pipe(
+    catchError((error) => {
+      // Si el servidor devuelve 401 (no autorizado / token inválido o expirado)
+      // limpiamos el localStorage y mandamos al usuario al login
+      if (error.status === 401) {
+        localStorage.removeItem('token');
+        localStorage.removeItem('user');
+        router.navigate(['/login']);
+      }
+
+      // Re-lanzamos el error para que el componente que hizo la petición
+      // también pueda manejarlo si quiere (ej: mostrar un mensaje de error)
+      return throwError(() => error);
+    }),
+  );
+};
+===== ./src/app/pages/admin/admin.html =====
+<div class="container-fluid py-4 bg-dark min-vh-100">
+  <!-- Navbar -->
+  <app-navbar />
+
+  <div class="container">
+    <h5 class="text-white mb-4">Gestión de usuarios</h5>
+
+    <!-- Spinner -->
+    @if (loading) {
+      <div class="d-flex justify-content-center my-5">
+        <div class="spinner-border text-light" role="status">
+          <span class="visually-hidden">Cargando...</span>
+        </div>
+      </div>
+    }
+
+    <!-- Tabla de usuarios -->
+    @if (!loading) {
+      <div class="card">
+        <div class="card-body p-0">
+          <table class="table table-hover mb-0">
+            <thead class="table-dark">
+              <tr>
+                <th>Avatar</th>
+                <th>Nombre</th>
+                <th>Username</th>
+                <th>Email</th>
+                <th>Rol actual</th>
+                <th>Cambiar rol</th>
+              </tr>
+            </thead>
+            <tbody>
+              @for (usuario of usuarios; track usuario._id) {
+                <tr>
+                  <td>
+                    <img
+                      [src]="usuario.imagenPerfil || 'https://i.pravatar.cc/40'"
+                      class="rounded-circle"
+                      style="width: 40px; height: 40px; object-fit: cover"
+                    />
+                  </td>
+                  <td>{{ usuario.nombre }} {{ usuario.apellido }}</td>
+                  <td>@{{ usuario.username }}</td>
+                  <td>{{ usuario.email }}</td>
+                  <td>
+                    <span
+                      class="badge"
+                      [class.bg-danger]="usuario.perfil === 'administrador'"
+                      [class.bg-secondary]="usuario.perfil === 'usuario'"
+                    >
+                      {{ usuario.perfil }}
+                    </span>
+                  </td>
+                  <td>
+                    <select
+                      class="form-select form-select-sm"
+                      [value]="usuario.perfil"
+                      (change)="updateRol(usuario._id, $any($event.target).value)"
+                    >
+                      <option value="usuario">usuario</option>
+                      <option value="administrador">administrador</option>
+                    </select>
+                  </td>
+                </tr>
+              }
+            </tbody>
+          </table>
+        </div>
+      </div>
+    }
+  </div>
+</div>
+===== ./src/app/pages/admin/admin.ts =====
+import { Component, inject, OnInit, ChangeDetectorRef } from '@angular/core';
+// import { RouterLink } from '@angular/router';
+import { AuthService } from '../../services/auth.service';
+import { Navbar } from '../../components/navbar/navbar';
+
+@Component({
+  selector: 'app-admin',
+  standalone: true,
+  imports: [Navbar],
+  templateUrl: './admin.html',
+  styleUrl: './admin.css',
+})
+export class Admin implements OnInit {
+  private authService = inject(AuthService);
+  private cdr = inject(ChangeDetectorRef);
+
+  usuarios: any[] = [];
+  loading = false;
+  currentUser: any = null;
+
+  ngOnInit() {
+    this.currentUser = JSON.parse(localStorage.getItem('user') || '{}');
+    this.loadUsuarios();
+  }
+
+  loadUsuarios() {
+    this.loading = true;
+    this.authService.getUsers().subscribe({
+      next: (res: any) => {
+        this.usuarios = res;
+        this.loading = false;
+        this.cdr.detectChanges();
+      },
+      error: () => {
+        this.loading = false;
+        this.cdr.detectChanges();
+      }
+    });
+  }
+
+  updateRol(userId: string, perfil: string) {
+    this.authService.updateRol(userId, perfil).subscribe({
+      next: () => {
+        this.loadUsuarios();
+      }
+    });
+  }
+}
+===== ./src/app/pages/login/login.html =====
+<div class="container-fluid vh-100 d-flex align-items-center justify-content-center bg-light">
+  <!-- MODAL -->
+  @if (showModal) {
+    <div class="modal d-block" tabindex="-1" style="background: rgba(0, 0, 0, 0.5)">
+      <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+          <div
+            class="modal-header"
+            [class.bg-success]="modalType === 'success'"
+            [class.bg-danger]="modalType === 'error'"
+          >
+            <h5 class="modal-title text-white">
+              {{ modalType === 'success' ? '¡Éxito!' : 'Error' }}
+            </h5>
+            <button type="button" class="btn-close btn-close-white" (click)="closeModal()"></button>
+          </div>
+          <div class="modal-body">
+            <p class="mb-0">{{ modalMessage }}</p>
+          </div>
+          <div class="modal-footer">
+            <button type="button" class="btn btn-dark" (click)="closeModal()">Cerrar</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  }
+
+  <div class="row shadow-lg rounded-4 overflow-hidden" style="max-width: 900px; width: 100%">
+    <!-- LEFT PANEL -->
+    <div
+      class="col-md-6 d-none d-md-flex flex-column justify-content-center align-items-center text-white p-5"
+      style="background: linear-gradient(135deg, #111, #333)"
+    >
+      <h2 class="fw-light">Red Social</h2>
+      <p class="text-center opacity-75">Conectá, compartí y descubrí personas</p>
+    </div>
+
+    <!-- FORM -->
+    <div class="col-md-6 bg-white p-5">
+      <h3 class="mb-1 fw-light">Bienvenido 👋</h3>
+      <p class="text-muted mb-4">Iniciá sesión en tu cuenta</p>
+
+      <form [formGroup]="form">
+        <!-- EMAIL O USERNAME -->
+        <div class="mb-3">
+          <label class="form-label">Email o nombre de usuario</label>
+          <input type="text" class="form-control" formControlName="identifier" />
+          @if (form.get('identifier')?.invalid && form.get('identifier')?.touched) {
+            <small class="text-danger">Campo requerido</small>
+          }
+        </div>
+
+        <!-- PASSWORD -->
+        <div class="mb-3">
+          <label class="form-label">Contraseña</label>
+          <input type="password" class="form-control" formControlName="password" />
+          @if (form.get('password')?.invalid && form.get('password')?.touched) {
+            <small class="text-danger">Mínimo 8 caracteres, una mayúscula y un número</small>
+          }
+        </div>
+
+        <!-- BUTTON -->
+        <button class="btn btn-dark w-100 py-2" (click)="login()" [disabled]="form.invalid">
+          Iniciar sesión
+        </button>
+      </form>
+
+      <hr class="my-4" />
+
+      <p class="text-center mb-0 small">
+        ¿No tenés cuenta?
+        <a routerLink="/register" class="text-decoration-none fw-semibold"> Registrate </a>
+      </p>
+    </div>
+  </div>
+</div>
+===== ./src/app/pages/login/login.ts =====
+// src/app/pages/login/login.ts
+
+import { Component, inject } from '@angular/core';
+import { ReactiveFormsModule, FormBuilder, FormGroup, Validators } from '@angular/forms';
+import { Router, RouterLink } from '@angular/router';
+import { AuthService } from '../../services/auth.service';
+import { SessionService } from '../../services/session.service';
+
+@Component({
+  selector: 'app-login',
+  standalone: true,
+  imports: [ReactiveFormsModule, RouterLink],
+  templateUrl: './login.html',
+  styleUrl: './login.css',
+})
+export class Login {
+  private fb = inject(FormBuilder);
+  private router = inject(Router);
+  private authService = inject(AuthService);
+  private sessionService = inject(SessionService);
+
+  showModal = false;
+  modalMessage = '';
+  modalType: 'success' | 'error' = 'success';
+
+  form: FormGroup = this.fb.group({
+    identifier: ['', Validators.required],
+    password: [
+      '',
+      [Validators.required, Validators.minLength(8), Validators.pattern(/^(?=.*[A-Z])(?=.*\d).+$/)],
+    ],
+  });
+
+  openModal(message: string, type: 'success' | 'error') {
+    this.modalMessage = message;
+    this.modalType = type;
+    this.showModal = true;
+  }
+
+  closeModal() {
+    this.showModal = false;
+  }
+
+  login() {
+    if (this.form.invalid) {
+      this.openModal('Completa los campos correctamente', 'error');
+      return;
+    }
+
+    const { identifier, password } = this.form.value;
+
+    this.authService.login(identifier, password).subscribe({
+      next: (res: any) => {
+        // Guardamos token y usuario en localStorage
+        localStorage.setItem('token', res.token);
+        localStorage.setItem('user', JSON.stringify(res.user));
+
+        // Iniciamos el timer de sesión usando el callback que App registró previamente
+        // reiniciarConCallbackActual() reutiliza el callback del modal que ya tiene guardado
+        // así no necesitamos acceder a App directamente desde acá
+        this.sessionService.reiniciarConCallbackActual();
+
+        this.openModal('Inicio de sesión exitoso 🎉', 'success');
+        setTimeout(() => {
+          this.closeModal();
+          this.router.navigate(['/posts']);
+        }, 1500);
+      },
+      error: (err) => {
+        this.openModal(err.error?.message || 'Credenciales incorrectas', 'error');
+      },
+    });
+  }
+}
+===== ./src/app/pages/post-detail/post-detail.html =====
+<!-- src/app/pages/post-detail/post-detail.html -->
+
+<div class="min-vh-100" style="background: #0f0f0f">
+  <app-navbar />
+
+  <div class="container py-5" style="max-width: 680px">
+    <!-- Spinner de carga inicial -->
+    @if (loading) {
+      <div class="d-flex justify-content-center py-5">
+        <div class="spinner-border" style="color: #555" role="status">
+          <span class="visually-hidden">Cargando...</span>
+        </div>
+      </div>
+    }
+
+    <!-- Publicación -->
+    @if (post && !loading) {
+      <div
+        class="mb-5 rounded-4 overflow-hidden"
+        style="background: #1a1a1a; border: 1px solid #2a2a2a"
+      >
+        <!-- Autor y fecha -->
+        <div class="d-flex align-items-center gap-3 px-4 pt-4 pb-2">
+          <img
+            [src]="post.autor?.imagenPerfil || 'https://i.pravatar.cc/45?u=' + post.autor?._id"
+            class="rounded-circle"
+            style="width: 46px; height: 46px; object-fit: cover; border: 2px solid #333"
+          />
+          <div>
+            <p class="mb-0 fw-semibold text-white" style="font-size: 0.95rem">
+              {{ post.autor?.username }}
+            </p>
+            <p class="mb-0" style="color: #666; font-size: 0.78rem">
+              {{ post.createdAt | date: 'dd MMM yyyy · HH:mm' }}
+            </p>
+          </div>
+        </div>
+
+        <!-- Contenido -->
+        <div class="px-4 py-3">
+          <h4 class="text-white fw-semibold mb-2" style="font-size: 1.3rem">{{ post.titulo }}</h4>
+          <p style="color: #bbb; font-size: 0.95rem; line-height: 1.7; margin-bottom: 0">
+            {{ post.descripcion }}
+          </p>
+        </div>
+
+        <!-- Imagen -->
+        @if (post.imagenUrl) {
+          <div class="px-4 pb-2">
+            <img
+              [src]="post.imagenUrl"
+              class="w-100 rounded-3"
+              style="max-height: 450px; object-fit: cover"
+            />
+          </div>
+        }
+
+        <!-- Likes -->
+        <div class="px-4 py-3 d-flex align-items-center gap-2" style="border-top: 1px solid #222">
+          <span style="color: #4caf7d; font-size: 1rem">♥</span>
+          <span style="color: #888; font-size: 0.88rem">{{ post.likes?.length }} me gusta</span>
+        </div>
+      </div>
+
+      <!-- Sección de comentarios -->
+      <h6 class="text-white fw-semibold mb-3" style="font-size: 1rem; letter-spacing: 0.3px">
+        Comentarios
+      </h6>
+
+      <!-- Escribir comentario -->
+      @if (currentUser?._id) {
+        <div class="mb-4 p-3 rounded-4" style="background: #1a1a1a; border: 1px solid #2a2a2a">
+          <textarea
+            class="form-control mb-2 border-0 text-white"
+            rows="2"
+            placeholder="Escribí un comentario..."
+            [(ngModel)]="nuevoComentario"
+            style="background: #252525; border-radius: 10px; resize: none; font-size: 0.88rem"
+          ></textarea>
+          <div class="d-flex justify-content-end">
+            <button
+              class="btn px-4 py-1 fw-semibold"
+              (click)="enviarComentario()"
+              [disabled]="!nuevoComentario.trim()"
+              style="background: #fff; color: #000; border-radius: 20px; font-size: 0.85rem"
+            >
+              Comentar
+            </button>
+          </div>
+        </div>
+      }
+
+      <!-- Lista de comentarios -->
+      @for (comentario of comentarios; track comentario._id) {
+        <div class="mb-2 p-3 rounded-4" style="background: #161616; border: 1px solid #252525">
+          <!-- Cabecera del comentario -->
+          <div class="d-flex justify-content-between align-items-start">
+            <div class="d-flex align-items-center gap-2">
+              <img
+                [src]="
+                  comentario.autorId?.imagenPerfil ||
+                  'https://i.pravatar.cc/32?u=' + comentario.autorId?._id
+                "
+                class="rounded-circle"
+                style="width: 32px; height: 32px; object-fit: cover; border: 1px solid #333"
+              />
+              <div>
+                <span class="fw-semibold text-white" style="font-size: 0.85rem">
+                  {{ comentario.autorId?.username }}
+                </span>
+                <span class="ms-2" style="color: #555; font-size: 0.75rem">
+                  {{ comentario.createdAt | date: 'dd/MM/yyyy HH:mm' }}
+                </span>
+                @if (comentario.modificado) {
+                  <span class="ms-1 fst-italic" style="color: #555; font-size: 0.75rem"
+                    >(editado)</span
+                  >
+                }
+              </div>
+            </div>
+
+            <!-- Botón editar — solo visible para el autor del comentario -->
+            @if (esAutorComentario(comentario) && comentarioEditandoId !== comentario._id) {
+              <button
+                class="btn btn-sm"
+                (click)="iniciarEdicion(comentario)"
+                style="
+                  color: #666;
+                  font-size: 0.75rem;
+                  border: 1px solid #2a2a2a;
+                  border-radius: 20px;
+                  padding: 2px 12px;
+                "
+              >
+                Editar
+              </button>
+            }
+          </div>
+
+          <!-- Modo lectura -->
+          @if (comentarioEditandoId !== comentario._id) {
+            <p class="mb-0 mt-2" style="color: #bbb; font-size: 0.88rem; margin-left: 42px">
+              {{ comentario.mensaje }}
+            </p>
+          }
+
+          <!-- Modo edición -->
+          @if (comentarioEditandoId === comentario._id) {
+            <div class="mt-2" style="margin-left: 42px">
+              <textarea
+                class="form-control mb-2 border-0 text-white"
+                rows="2"
+                [(ngModel)]="textoEditando"
+                style="background: #0f0f0f; border-radius: 10px; resize: none; font-size: 0.85rem"
+              ></textarea>
+              <div class="d-flex gap-2 justify-content-end">
+                <button
+                  class="btn btn-sm"
+                  (click)="cancelarEdicion()"
+                  style="
+                    color: #888;
+                    font-size: 0.78rem;
+                    border: 1px solid #333;
+                    border-radius: 20px;
+                    padding: 3px 14px;
+                  "
+                >
+                  Cancelar
+                </button>
+                <button
+                  class="btn btn-sm fw-semibold"
+                  (click)="guardarEdicion(comentario)"
+                  [disabled]="!textoEditando.trim()"
+                  style="
+                    background: #fff;
+                    color: #000;
+                    border-radius: 20px;
+                    padding: 3px 14px;
+                    font-size: 0.78rem;
+                  "
+                >
+                  Guardar
+                </button>
+              </div>
+            </div>
+          }
+        </div>
+      }
+
+      <!-- Sin comentarios -->
+      @if (comentarios.length === 0 && !loading) {
+        <p class="text-center py-4" style="color: #555; font-size: 0.9rem">
+          Todavía no hay comentarios. ¡Sé el primero!
+        </p>
+      }
+
+      <!-- Botón cargar más -->
+      @if (hayMasComentarios && comentarios.length > 0) {
+        <div class="d-flex justify-content-center mt-4">
+          <button
+            class="btn btn-sm px-4 py-2"
+            (click)="cargarMas()"
+            [disabled]="loadingMas"
+            style="
+              border-radius: 20px;
+              border: 1px solid #333;
+              color: #aaa;
+              background: transparent;
+              font-size: 0.85rem;
+            "
+          >
+            @if (loadingMas) {
+              <span
+                class="spinner-border spinner-border-sm me-2"
+                style="width: 0.8rem; height: 0.8rem"
+                role="status"
+              ></span>
+            }
+            Cargar más comentarios
+          </button>
+        </div>
+      }
+    }
+  </div>
+</div>
+===== ./src/app/pages/post-detail/post-detail.ts =====
+// src/app/pages/post-detail/post-detail.ts ← archivo nuevo
+
+import { Component, inject, OnInit, ChangeDetectorRef } from '@angular/core';
+import { ActivatedRoute } from '@angular/router';
+import { FormsModule } from '@angular/forms';
+import { DatePipe } from '@angular/common';
+import { AuthService } from '../../services/auth.service';
+import { Navbar } from '../../components/navbar/navbar';
+@Component({
+  selector: 'app-post-detail',
+  standalone: true,
+  imports: [ FormsModule, DatePipe, Navbar],
+  templateUrl: './post-detail.html',
+  styleUrl: './post-detail.css',
+})
+export class PostDetail implements OnInit {
+  private route = inject(ActivatedRoute);
+  private authService = inject(AuthService);
+  private cdr = inject(ChangeDetectorRef);
+
+  // Usuario logueado, lo leemos del localStorage
+  currentUser: any = null;
+
+  // Datos de la publicación que estamos viendo
+  post: any = null;
+
+  // Lista de comentarios cargados hasta el momento
+  comentarios: any[] = [];
+
+  // Control de paginación de comentarios
+  offsetComentarios = 0;
+  limitComentarios = 5;
+
+  // true si hay más comentarios para cargar (para mostrar/ocultar el botón "cargar más")
+  hayMasComentarios = true;
+
+  // Controla el spinner general de la página
+  loading = false;
+
+  // Controla el spinner del botón "cargar más"
+  loadingMas = false;
+
+  // Texto del nuevo comentario que está escribiendo el usuario
+  nuevoComentario = '';
+
+  // Cuando es distinto de null, significa que estamos editando ese comentario
+  comentarioEditandoId: string | null = null;
+
+  // Texto temporal mientras se edita un comentario
+  textoEditando = '';
+
+  ngOnInit() {
+    this.currentUser = JSON.parse(localStorage.getItem('user') || '{}');
+
+    // Leemos el id de la publicación desde la URL (/posts/:id)
+    const postId = this.route.snapshot.paramMap.get('id');
+    if (postId) {
+      this.cargarPost(postId);
+      this.cargarComentarios(postId);
+    }
+  }
+
+  // ── CARGAR POST ───────────────────────────────────────────────────────────
+  cargarPost(postId: string) {
+    this.loading = true;
+    this.authService.getPostById(postId).subscribe({
+      next: (res: any) => {
+        this.post = res;
+        this.loading = false;
+        this.cdr.detectChanges();
+      },
+      error: () => {
+        this.loading = false;
+        this.cdr.detectChanges();
+      },
+    });
+  }
+
+  // ── CARGAR COMENTARIOS ────────────────────────────────────────────────────
+  // firstLoad = true significa que es la primera carga (reseteamos la lista)
+  // firstLoad = false significa que el usuario clickeó "cargar más"
+  cargarComentarios(postId: string, firstLoad = true) {
+    if (firstLoad) {
+      // Primera carga: reseteamos todo
+      this.offsetComentarios = 0;
+      this.comentarios = [];
+      this.loading = true;
+    } else {
+      // Carga adicional: solo mostramos el spinner del botón
+      this.loadingMas = true;
+    }
+
+    this.authService
+      .getComentarios(postId, this.offsetComentarios, this.limitComentarios)
+      .subscribe({
+        next: (res: any) => {
+          // Agregamos los nuevos comentarios a los que ya teníamos
+          this.comentarios = [...this.comentarios, ...res];
+
+          // Si recibimos menos comentarios de los que pedimos, no hay más para cargar
+          this.hayMasComentarios = res.length === this.limitComentarios;
+
+          // Avanzamos el offset para la próxima carga
+          this.offsetComentarios += this.limitComentarios;
+
+          this.loading = false;
+          this.loadingMas = false;
+          this.cdr.detectChanges();
+        },
+        error: () => {
+          this.loading = false;
+          this.loadingMas = false;
+          this.cdr.detectChanges();
+        },
+      });
+  }
+
+  // ── CARGAR MÁS COMENTARIOS ────────────────────────────────────────────────
+  cargarMas() {
+    if (this.post) {
+      this.cargarComentarios(this.post._id, false);
+    }
+  }
+
+  // ── ENVIAR COMENTARIO ─────────────────────────────────────────────────────
+  enviarComentario() {
+    if (!this.nuevoComentario.trim() || !this.post) return;
+
+    this.authService.createComentario(this.post._id, this.nuevoComentario.trim()).subscribe({
+      next: (res: any) => {
+        this.comentarios = [res, ...this.comentarios];
+        this.nuevoComentario = '';
+
+        // Sumamos 1 al offset porque ahora hay un comentario más en la lista
+        // que el backend no contó dentro de la paginación todavía
+        this.offsetComentarios += 1;
+
+        this.cdr.detectChanges();
+      },
+    });
+  }
+
+  // ── INICIAR EDICIÓN ───────────────────────────────────────────────────────
+  // Activa el modo edición para un comentario específico
+  iniciarEdicion(comentario: any) {
+    this.comentarioEditandoId = comentario._id;
+    // Precargamos el texto actual para que el usuario lo pueda modificar
+    this.textoEditando = comentario.mensaje;
+  }
+
+  // ── CANCELAR EDICIÓN ──────────────────────────────────────────────────────
+  cancelarEdicion() {
+    this.comentarioEditandoId = null;
+    this.textoEditando = '';
+  }
+
+  // ── GUARDAR EDICIÓN ───────────────────────────────────────────────────────
+  guardarEdicion(comentario: any) {
+    if (!this.textoEditando.trim()) return;
+
+    this.authService.updateComentario(comentario._id, this.textoEditando.trim()).subscribe({
+      next: (res: any) => {
+        // Actualizamos el comentario en la lista local sin recargar todo
+        const index = this.comentarios.findIndex((c) => c._id === comentario._id);
+        if (index !== -1) {
+          this.comentarios[index] = res;
+        }
+        this.cancelarEdicion();
+        this.cdr.detectChanges();
+      },
+    });
+  }
+
+  // ── HELPERS ───────────────────────────────────────────────────────────────
+
+  // Devuelve true si el comentario pertenece al usuario logueado
+  // Lo usamos en el template para mostrar/ocultar el botón de editar
+  esAutorComentario(comentario: any): boolean {
+    return comentario.autorId?._id === this.currentUser?._id;
+  }
+}
+===== ./src/app/pages/posts/posts.html =====
+<!-- src/app/pages/posts/posts.html -->
+
+<div class="min-vh-100" style="background: #0f0f0f;">
+
+  <!-- Navbar -->
+  <app-navbar />
+
+  <div class="container py-5" style="max-width: 680px;">
+
+    <!-- Crear post -->
+    <div class="mb-5 p-4 rounded-4" style="background: #1a1a1a; border: 1px solid #2a2a2a;">
+      <div class="d-flex gap-3 align-items-start">
+        <!-- Avatar del usuario -->
+        <img
+          [src]="currentUser.imagenPerfil || 'https://i.pravatar.cc/40?u=' + currentUser._id"
+          class="rounded-circle flex-shrink-0"
+          style="width: 42px; height: 42px; object-fit: cover; border: 2px solid #333;"
+        />
+        <div class="w-100">
+          <input
+            type="text"
+            class="form-control mb-2 border-0 text-white fw-semibold"
+            placeholder="Título de tu publicación"
+            [(ngModel)]="nuevoTitulo"
+            style="background: #252525; border-radius: 10px; font-size: 0.95rem;"
+          />
+          <textarea
+            class="form-control border-0 text-white mb-3"
+            rows="3"
+            placeholder="¿Qué estás pensando?"
+            [(ngModel)]="nuevaDescripcion"
+            style="background: #252525; border-radius: 10px; resize: none; font-size: 0.9rem;"
+          ></textarea>
+          <div class="d-flex justify-content-between align-items-center">
+            <label class="d-flex align-items-center gap-2 px-3 py-2 rounded-3"
+                   style="background: #252525; cursor: pointer; border: 1px solid #333;">
+              <span style="font-size: 1rem;">🖼️</span>
+              <span style="color: #aaa; font-size: 0.85rem;">Imagen</span>
+              <input type="file" class="d-none" accept="image/*" (change)="onFileChange($event)" />
+            </label>
+            <button
+              class="btn px-4 py-2 fw-semibold"
+              (click)="createPost()"
+              style="background: #fff; color: #000; border-radius: 20px; font-size: 0.88rem;"
+            >
+              Publicar
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Ordenar -->
+    <div class="d-flex gap-2 mb-4">
+      <button
+        class="btn btn-sm px-3 py-1 fw-semibold"
+        (click)="changeOrder('fecha')"
+        [style.background]="orderBy === 'fecha' ? '#fff' : 'transparent'"
+        [style.color]="orderBy === 'fecha' ? '#000' : '#aaa'"
+        style="border-radius: 20px; border: 1px solid #333; font-size: 0.85rem; transition: all 0.2s;"
+      >
+        Recientes
+      </button>
+      <button
+        class="btn btn-sm px-3 py-1 fw-semibold"
+        (click)="changeOrder('likes')"
+        [style.background]="orderBy === 'likes' ? '#fff' : 'transparent'"
+        [style.color]="orderBy === 'likes' ? '#000' : '#aaa'"
+        style="border-radius: 20px; border: 1px solid #333; font-size: 0.85rem; transition: all 0.2s;"
+      >
+        Populares
+      </button>
+    </div>
+
+    <!-- Spinner -->
+    @if (loading) {
+      <div class="d-flex justify-content-center py-5">
+        <div class="spinner-border" style="color: #555;" role="status">
+          <span class="visually-hidden">Cargando...</span>
+        </div>
+      </div>
+    }
+
+    <!-- Feed -->
+    @for (post of posts; track post._id) {
+      <div class="mb-3 rounded-4 overflow-hidden"
+           style="background: #1a1a1a; border: 1px solid #2a2a2a; transition: border-color 0.2s;">
+
+        <!-- Cabecera -->
+        <div class="d-flex justify-content-between align-items-center px-4 pt-4 pb-2">
+          <div class="d-flex align-items-center gap-3">
+            <img
+              [src]="post.autor.imagenPerfil || 'https://i.pravatar.cc/40?u=' + post.autor._id"
+              class="rounded-circle"
+              style="width: 40px; height: 40px; object-fit: cover; border: 2px solid #333;"
+            />
+            <div>
+              <p class="mb-0 fw-semibold text-white" style="font-size: 0.92rem;">
+                {{ post.autor.username }}
+              </p>
+              <p class="mb-0" style="color: #666; font-size: 0.78rem;">
+                {{ post.createdAt | date: 'dd MMM yyyy · HH:mm' }}
+              </p>
+            </div>
+          </div>
+
+          @if (esAutor(post) || esAdmin()) {
+            <button
+              class="btn btn-sm"
+              (click)="deletePost(post._id)"
+              style="color: #666; font-size: 0.8rem; border: 1px solid #2a2a2a; border-radius: 20px; padding: 3px 12px;"
+            >
+              Eliminar
+            </button>
+          }
+        </div>
+
+        <!-- Contenido -->
+        <div class="px-4 py-2">
+          <h6 class="text-white fw-semibold mb-1" style="font-size: 1rem;">{{ post.titulo }}</h6>
+          <p style="color: #bbb; font-size: 0.9rem; line-height: 1.6; margin-bottom: 0;">
+            {{ post.descripcion }}
+          </p>
+        </div>
+
+        <!-- Imagen -->
+        @if (post.imagenUrl) {
+          <div class="px-4 pt-2">
+            <img
+              [src]="post.imagenUrl"
+              class="w-100 rounded-3"
+              style="max-height: 360px; object-fit: cover;"
+            />
+          </div>
+        }
+
+        <!-- Acciones -->
+        <div class="d-flex justify-content-between align-items-center px-4 py-3 mt-1"
+             style="border-top: 1px solid #222;">
+          <button
+            class="btn btn-sm d-flex align-items-center gap-2"
+            (click)="toggleLike(post)"
+            style="border-radius: 20px; padding: 5px 14px; font-size: 0.85rem; transition: all 0.2s;"
+            [style.background]="post.likes.includes(currentUser._id) ? '#1d3a2a' : 'transparent'"
+            [style.color]="post.likes.includes(currentUser._id) ? '#4caf7d' : '#888'"
+            [style.border]="post.likes.includes(currentUser._id) ? '1px solid #2d5a3d' : '1px solid #333'"
+          >
+            {{ post.likes.includes(currentUser._id) ? '♥' : '♡' }}
+            <span>{{ post.likes.length }}</span>
+          </button>
+
+          <a
+            [routerLink]="['/posts', post._id]"
+            class="btn btn-sm d-flex align-items-center gap-2"
+            style="border-radius: 20px; padding: 5px 16px; font-size: 0.85rem;
+                   color: #aaa; border: 1px solid #333; text-decoration: none;"
+          >
+            💬 Ver publicación
+          </a>
+        </div>
+
+      </div>
+    }
+
+    <!-- Paginación -->
+    <div class="d-flex justify-content-between mt-4">
+      <button
+        class="btn btn-sm px-4"
+        (click)="prevPage()"
+        [disabled]="offset === 0"
+        style="border-radius: 20px; border: 1px solid #333; color: #aaa; background: transparent; font-size: 0.85rem;"
+      >
+        ← Anterior
+      </button>
+      <button
+        class="btn btn-sm px-4"
+        (click)="nextPage()"
+        [disabled]="posts.length < limit"
+        style="border-radius: 20px; border: 1px solid #333; color: #aaa; background: transparent; font-size: 0.85rem;"
+      >
+        Siguiente →
+      </button>
+    </div>
+
+  </div>
+</div>
+===== ./src/app/pages/posts/posts.ts =====
+import { Component, inject, OnInit, ChangeDetectorRef } from '@angular/core';
+import { RouterLink } from '@angular/router';
+import { FormsModule } from '@angular/forms';
+import { DatePipe } from '@angular/common';
+import { AuthService } from '../../services/auth.service';
+import { Navbar } from '../../components/navbar/navbar';
+
+@Component({
+  selector: 'app-posts',
+  standalone: true,
+  imports: [RouterLink, FormsModule, DatePipe, Navbar],
+  templateUrl: './posts.html',
+  styleUrl: './posts.css',
+})
+export class Posts implements OnInit {
+  private authService = inject(AuthService);
+  private cdr = inject(ChangeDetectorRef);
+
+  posts: any[] = [];
+  currentUser: any = null;
+  orderBy: 'fecha' | 'likes' = 'fecha';
+  offset = 0;
+  limit = 5;
+  loading = false;
+
+  nuevoTitulo = '';
+  nuevaDescripcion = '';
+  selectedFile: File | null = null;
+
+  ngOnInit() {
+    this.currentUser = JSON.parse(localStorage.getItem('user') || '{}');
+    this.loadPosts();
+  }
+
+  onFileChange(event: Event) {
+    const input = event.target as HTMLInputElement;
+    if (input.files?.length) {
+      this.selectedFile = input.files[0];
+    }
+  }
+
+  loadPosts() {
+    this.loading = true;
+    this.authService.getPosts(this.offset, this.limit, this.orderBy).subscribe({
+      next: (res: any) => {
+        this.posts = res;
+        this.loading = false;
+        this.cdr.detectChanges();
+      },
+      error: () => {
+        this.loading = false;
+        this.cdr.detectChanges();
+      }
+    });
+  }
+
+  createPost() {
+    if (!this.nuevoTitulo || !this.nuevaDescripcion) return;
+
+    const formData = new FormData();
+    formData.append('titulo', this.nuevoTitulo);
+    formData.append('descripcion', this.nuevaDescripcion);
+    if (this.selectedFile) {
+      formData.append('file', this.selectedFile);
+    }
+
+    this.authService.createPost(formData).subscribe({
+      next: () => {
+        this.nuevoTitulo = '';
+        this.nuevaDescripcion = '';
+        this.selectedFile = null;
+        this.loadPosts();
+      }
+    });
+  }
+
+  changeOrder(order: 'fecha' | 'likes') {
+    this.orderBy = order;
+    this.offset = 0;
+    this.loadPosts();
+  }
+
+  nextPage() {
+    this.offset += this.limit;
+    this.loadPosts();
+  }
+
+  prevPage() {
+    if (this.offset > 0) {
+      this.offset -= this.limit;
+      this.loadPosts();
+    }
+  }
+
+  toggleLike(post: any) {
+    const userId = this.currentUser._id;
+    const yaLiked = post.likes.some((id: string) => id === userId);
+
+    if (yaLiked) {
+      this.authService.removeLike(post._id).subscribe({
+        next: () => this.loadPosts()
+      });
+    } else {
+      this.authService.addLike(post._id).subscribe({
+        next: () => this.loadPosts()
+      });
+    }
+  }
+
+  deletePost(postId: string) {
+    this.authService.deletePost(postId).subscribe({
+      next: () => this.loadPosts()
+    });
+  }
+
+  esAutor(post: any) {
+    return post.autor._id === this.currentUser._id;
+  }
+
+  esAdmin() {
+    return this.currentUser.perfil === 'administrador';
+  }
+}
+===== ./src/app/pages/profile/profile.html =====
+<!-- src/app/pages/profile/profile.html -->
+
+<div class="min-vh-100" style="background: #0f0f0f">
+  <!-- Navbar -->
+  <app-navbar />
+
+  <div class="container py-5" style="max-width: 680px">
+    <!-- Spinner -->
+    @if (loading) {
+      <div class="d-flex justify-content-center py-5">
+        <div class="spinner-border" style="color: #555" role="status">
+          <span class="visually-hidden">Cargando...</span>
+        </div>
+      </div>
+    }
+
+    <!-- Perfil header -->
+    @if (user) {
+      <div
+        class="mb-4 p-4 rounded-4 d-flex align-items-center gap-4 flex-wrap"
+        style="background: #1a1a1a; border: 1px solid #2a2a2a"
+      >
+        <img
+          [src]="user.imagenPerfil || 'https://i.pravatar.cc/120?u=' + user._id"
+          class="rounded-circle"
+          crossorigin="anonymous"
+          style="width: 100px; height: 100px; object-fit: cover; border: 3px solid #333"
+          alt="avatar"
+        />
+        <div>
+          <h4 class="mb-1 text-white fw-semibold">{{ user.nombre }} {{ user.apellido }}</h4>
+          <p class="mb-1" style="color: #666; font-size: 0.9rem">&#64;{{ user.username }}</p>
+          <p class="mb-0" style="color: #bbb; font-size: 0.92rem">{{ user.descripcion }}</p>
+        </div>
+      </div>
+
+      <!-- Info -->
+      <div class="mb-4 p-4 rounded-4" style="background: #1a1a1a; border: 1px solid #2a2a2a">
+        <h6 class="mb-3 fw-semibold" style="color: #fff; font-size: 0.95rem; letter-spacing: 0.3px">
+          Información
+        </h6>
+        <div class="d-flex flex-column gap-2">
+          <p class="mb-0" style="font-size: 0.88rem">
+            <span style="color: #666">Email:</span>
+            <span class="text-white ms-1">{{ user.email }}</span>
+          </p>
+          <p class="mb-0" style="font-size: 0.88rem">
+            <span style="color: #666">Fecha de nacimiento:</span>
+            <span class="text-white ms-1">{{ user.fechaNacimiento | date: 'dd/MM/yyyy' }}</span>
+          </p>
+          <p class="mb-0" style="font-size: 0.88rem">
+            <span style="color: #666">Rol:</span>
+            <span class="text-white ms-1">{{ user.perfil }}</span>
+          </p>
+        </div>
+      </div>
+
+      <!-- Últimas publicaciones -->
+      <h6 class="text-white fw-semibold mb-3" style="font-size: 1rem; letter-spacing: 0.3px">
+        Últimas publicaciones
+      </h6>
+
+      @if (ultimosPosts.length === 0) {
+        <p class="text-center py-4" style="color: #555; font-size: 0.9rem">
+          No tenés publicaciones aún.
+        </p>
+      }
+
+      @for (post of ultimosPosts; track post._id) {
+        <div
+          class="mb-3 rounded-4 overflow-hidden"
+          style="background: #1a1a1a; border: 1px solid #2a2a2a"
+        >
+          <div class="px-4 py-3">
+            <h6 class="text-white fw-semibold mb-1" style="font-size: 0.95rem">
+              {{ post.titulo }}
+            </h6>
+            <p class="mb-2" style="color: #666; font-size: 0.78rem">
+              {{ post.createdAt | date: 'dd MMM yyyy · HH:mm' }}
+            </p>
+            <p style="color: #bbb; font-size: 0.88rem; line-height: 1.6; margin-bottom: 0">
+              {{ post.descripcion }}
+            </p>
+          </div>
+
+          @if (post.imagenUrl) {
+            <div class="px-4 pb-2">
+              <img
+                [src]="post.imagenUrl"
+                class="w-100 rounded-3"
+                style="max-height: 280px; object-fit: cover"
+              />
+            </div>
+          }
+
+          <div class="px-4 py-2 d-flex align-items-center gap-2" style="border-top: 1px solid #222">
+            <span style="color: #4caf7d; font-size: 0.9rem">♥</span>
+            <span style="color: #888; font-size: 0.82rem">{{ post.likes.length }} me gusta</span>
+          </div>
+        </div>
+      }
+    }
+  </div>
+</div>
+===== ./src/app/pages/profile/profile.ts =====
+import { Component, inject, OnInit, ChangeDetectorRef } from '@angular/core';
+// import { RouterLink } from '@angular/router';
+import { DatePipe } from '@angular/common';
+import { AuthService } from '../../services/auth.service';
+import { Navbar } from '../../components/navbar/navbar';
+@Component({
+  selector: 'app-profile',
+  standalone: true,
+  imports: [ DatePipe, Navbar],
+  templateUrl: './profile.html',
+  styleUrl: './profile.css',
+})
+export class Profile implements OnInit {
+  private authService = inject(AuthService);
+  private cdr = inject(ChangeDetectorRef);
+
+  user: any = null;
+  ultimosPosts: any[] = [];
+  loading = false;
+  currentUser: any = null;
+
+  ngOnInit() {
+    this.currentUser = JSON.parse(localStorage.getItem('user') || '{}');
+    this.user = this.currentUser;
+    this.cdr.detectChanges();
+    this.loadUltimosPosts();
+  }
+
+  loadUltimosPosts() {
+    this.authService.getPosts(0, 3, 'fecha', this.user._id).subscribe({
+      next: (res: any) => {
+        this.ultimosPosts = res;
+        this.loading = false;
+        this.cdr.detectChanges();
+      }
+    });
+  }
+}
+===== ./src/app/pages/register/register.html =====
+<div class="container-fluid vh-100 d-flex align-items-center justify-content-center bg-dark">
+  <!-- MODAL -->
+  @if (showModal) {
+    <div class="modal d-block" tabindex="-1" style="background: rgba(0, 0, 0, 0.5)">
+      <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+          <div
+            class="modal-header"
+            [class.bg-success]="modalType === 'success'"
+            [class.bg-danger]="modalType === 'error'"
+          >
+            <h5 class="modal-title text-white">
+              {{ modalType === 'success' ? '¡Éxito!' : 'Error' }}
+            </h5>
+            <button type="button" class="btn-close btn-close-white" (click)="closeModal()"></button>
+          </div>
+          <div class="modal-body">
+            <p class="mb-0">{{ modalMessage }}</p>
+          </div>
+          <div class="modal-footer">
+            <button type="button" class="btn btn-dark" (click)="closeModal()">Cerrar</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  }
+
+  <div class="row shadow-lg rounded-4 overflow-hidden" style="max-width: 950px; width: 100%">
+    <!-- LEFT PANEL -->
+    <div
+      class="col-md-4 d-none d-md-flex flex-column justify-content-center align-items-center text-white p-4"
+      style="background: linear-gradient(135deg, #111, #333)"
+    >
+      <h2 class="fw-light">Red Social</h2>
+      <p class="text-center opacity-75">Creá tu cuenta y empezá a conectar</p>
+    </div>
+
+    <!-- FORM -->
+    <div class="col-md-8 bg-white p-4">
+      <h4 class="fw-light mb-3">Registro ✨</h4>
+
+      <form [formGroup]="form">
+        <div class="row">
+          <!-- Nombre -->
+          <div class="col-md-6 mb-3">
+            <label class="form-label">Nombre</label>
+            <input type="text" class="form-control" formControlName="nombre" />
+            @if (form.get('nombre')?.invalid && form.get('nombre')?.touched) {
+              <small class="text-danger">Nombre requerido</small>
+            }
+          </div>
+
+          <!-- Apellido -->
+          <div class="col-md-6 mb-3">
+            <label class="form-label">Apellido</label>
+            <input type="text" class="form-control" formControlName="apellido" />
+            @if (form.get('apellido')?.invalid && form.get('apellido')?.touched) {
+              <small class="text-danger">Apellido requerido</small>
+            }
+          </div>
+
+          <!-- Username -->
+          <div class="col-md-6 mb-3">
+            <label class="form-label">Usuario</label>
+            <input type="text" class="form-control" formControlName="username" />
+            @if (form.get('username')?.invalid && form.get('username')?.touched) {
+              <small class="text-danger">Usuario requerido</small>
+            }
+          </div>
+
+          <!-- Fecha -->
+          <div class="col-md-6 mb-3">
+            <label class="form-label">Fecha de nacimiento</label>
+            <input type="date" class="form-control" formControlName="fechaNacimiento" />
+            @if (form.get('fechaNacimiento')?.invalid && form.get('fechaNacimiento')?.touched) {
+              <small class="text-danger">Fecha requerida</small>
+            }
+          </div>
+
+          <!-- Email -->
+          <div class="col-12 mb-3">
+            <label class="form-label">Correo</label>
+            <input type="email" class="form-control" formControlName="email" />
+            @if (form.get('email')?.invalid && form.get('email')?.touched) {
+              <small class="text-danger">Email inválido</small>
+            }
+          </div>
+
+          <!-- Password -->
+          <div class="col-md-6 mb-3">
+            <label class="form-label">Contraseña</label>
+            <input type="password" class="form-control" formControlName="password" />
+            @if (form.get('password')?.invalid && form.get('password')?.touched) {
+              <small class="text-danger">Mínimo 8 caracteres, una mayúscula y un número</small>
+            }
+          </div>
+
+          <!-- Repeat -->
+          <div class="col-md-6 mb-3">
+            <label class="form-label">Repetir contraseña</label>
+            <input type="password" class="form-control" formControlName="repeatPassword" />
+            @if (form.get('repeatPassword')?.invalid && form.get('repeatPassword')?.touched) {
+              <small class="text-danger">Requerido</small>
+            }
+          </div>
+
+          <!-- Descripción -->
+          <div class="col-12 mb-3">
+            <label class="form-label">Descripción breve</label>
+            <textarea class="form-control" rows="2" formControlName="descripcion"></textarea>
+            @if (form.get('descripcion')?.invalid && form.get('descripcion')?.touched) {
+              <small class="text-danger">Descripción requerida</small>
+            }
+          </div>
+
+          <!-- File -->
+          <div class="col-12 mb-3">
+            <label class="form-label">Imagen de perfil</label>
+            <input
+              type="file"
+              class="form-control"
+              accept="image/*"
+              (change)="onFileChange($event)"
+            />
+            @if (previewUrl) {
+              <img [src]="previewUrl" class="img-thumbnail mt-2" style="max-width: 200px;" alt="Preview" />
+            }
+          </div>
+
+          <!-- Rol -->
+          <div class="col-12 mb-3">
+            <label class="form-label">Rol</label>
+            <select class="form-select" formControlName="perfil">
+              <option value="usuario">Usuario</option>
+              <!-- <option value="administrador">Administrador</option> -->
+            </select>
+          </div>
+        </div>
+
+        <!-- BUTTON -->
+        <button class="btn btn-dark w-100 py-2" (click)="register()" [disabled]="form.invalid">
+          Crear cuenta
+        </button>
+      </form>
+
+      <p class="text-center mt-3 mb-0 small">
+        ¿Ya tenés cuenta?
+        <a routerLink="/login" class="text-decoration-none fw-semibold"> Iniciar sesión </a>
+      </p>
+    </div>
+  </div>
+</div>
+===== ./src/app/pages/register/register.ts =====
+import { Component, inject } from '@angular/core';
+import { ReactiveFormsModule, FormBuilder, FormGroup, Validators } from '@angular/forms';
+import { RouterLink } from '@angular/router';
+import { AuthService } from '../../services/auth.service';
+import { ChangeDetectorRef } from '@angular/core';
+@Component({
+  selector: 'app-register',
+  standalone: true,
+  imports: [ReactiveFormsModule, RouterLink],
+  templateUrl: './register.html',
+  styleUrl: './register.css',
+})
+export class Register {
+  private fb = inject(FormBuilder);
+  private authService = inject(AuthService);
+  private cdr = inject(ChangeDetectorRef);
+  showModal = false;
+  modalMessage = '';
+  modalType: 'success' | 'error' = 'success';
+  selectedFile: File | null = null;
+  previewUrl: string | null = null;
+
+  form: FormGroup = this.fb.group({
+    nombre: ['', Validators.required],
+    apellido: ['', Validators.required],
+    username: ['', Validators.required],
+    email: ['', [Validators.required, Validators.email]],
+    password: [
+      '',
+      [Validators.required, Validators.minLength(8), Validators.pattern(/^(?=.*[A-Z])(?=.*\d).+$/)],
+    ],
+    repeatPassword: ['', Validators.required],
+    fechaNacimiento: ['', Validators.required],
+    descripcion: ['', Validators.required],
+    perfil: ['usuario'],
+  });
+
+  onFileChange(event: Event) {
+    const input = event.target as HTMLInputElement;
+    if (input.files?.length) {
+      this.selectedFile = input.files[0];
+      const reader = new FileReader();
+      reader.onload = () => {
+        this.previewUrl = reader.result as string;
+        this.cdr.detectChanges();
+      };
+      reader.readAsDataURL(this.selectedFile);
+    }
+  }
+
+  openModal(message: string, type: 'success' | 'error') {
+    this.modalMessage = message;
+    this.modalType = type;
+    this.showModal = true;
+  }
+
+  closeModal() {
+    this.showModal = false;
+  }
+
+  register() {
+    if (this.form.invalid) {
+      this.openModal('Completa todos los campos correctamente', 'error');
+      return;
+    }
+
+    if (this.form.value.password !== this.form.value.repeatPassword) {
+      this.openModal('Las contraseñas no coinciden', 'error');
+      return;
+    }
+
+    const formData = new FormData();
+    Object.entries(this.form.value).forEach(([key, value]) => {
+      if (value !== null && value !== undefined) {
+        formData.append(key, value as string);
+      }
+    });
+
+    if (this.selectedFile) {
+      formData.append('file', this.selectedFile);
+    }
+
+    this.authService.register(formData).subscribe({
+      next: () => {
+        this.openModal('Usuario creado correctamente 🎉', 'success');
+        this.form.reset({ perfil: 'usuario' });
+        this.selectedFile = null;
+      },
+      error: (err) => {
+        this.openModal(err.error?.message || 'Error al registrar usuario', 'error');
+      },
+    });
+  }
+}
+===== ./src/app/services/auth.service.ts =====
+import { inject, Injectable } from '@angular/core';
+import { HttpClient, HttpHeaders } from '@angular/common/http';
+import { environment } from '../../environments/environment';
+
+@Injectable({
+  providedIn: 'root',
+})
+export class AuthService {
+  private http = inject(HttpClient);
+  private apiUrl = environment.apiUrl;
+
+  // Construye el header de autorización con el token guardado en localStorage
+  // Se reutiliza en todos los endpoints que requieren estar logueado
+  private getHeaders() {
+    const token = localStorage.getItem('token');
+    return new HttpHeaders({
+      Authorization: `Bearer ${token}`,
+    });
+  }
+
+  // ── AUTH ──────────────────────────────────────────────────────────────────
+
+  // Inicia sesión con email o username + password
+  // Devuelve token y datos del usuario
+  login(identifier: string, password: string) {
+    return this.http.post(`${this.apiUrl}/auth/login`, { email: identifier, password });
+  }
+
+  // Valida el token actual contra el backend
+  // Si el token es válido devuelve los datos frescos del usuario
+  // Si no es válido el interceptor captura el 401 y redirige al login
+  autorizar() {
+    return this.http.post(`${this.apiUrl}/auth/autorizar`, {}, {
+      headers: this.getHeaders(),
+    });
+  }
+
+  // Solicita un token nuevo con los mismos datos y 15 minutos más de vida
+  // Se llama cuando quedan 5 minutos de sesión y el usuario acepta extender
+  refrescar() {
+    return this.http.post(`${this.apiUrl}/auth/refrescar`, {}, {
+      headers: this.getHeaders(),
+    });
+  }
+
+  // ── USUARIOS ──────────────────────────────────────────────────────────────
+
+  register(formData: FormData) {
+    return this.http.post(`${this.apiUrl}/users`, formData);
+  }
+
+  getUsers() {
+    return this.http.get(`${this.apiUrl}/users`, {
+      headers: this.getHeaders(),
+    });
+  }
+
+  updateRol(userId: string, perfil: string) {
+    return this.http.patch(
+      `${this.apiUrl}/users/${userId}/rol`,
+      { perfil },
+      { headers: this.getHeaders() },
+    );
+  }
+
+  // ── POSTS ─────────────────────────────────────────────────────────────────
+
+  getPosts(offset = 0, limit = 10, orderBy = 'fecha', autorId?: string) {
+    let url = `${this.apiUrl}/posts?offset=${offset}&limit=${limit}&orderBy=${orderBy}`;
+    if (autorId) url += `&autorId=${autorId}`;
+    return this.http.get(url);
+  }
+
+  // Trae una publicación específica por su id
+  // La usamos en la página de detalle
+  getPostById(postId: string) {
+    return this.http.get(`${this.apiUrl}/posts/${postId}`);
+  }
+
+  createPost(formData: FormData) {
+    return this.http.post(`${this.apiUrl}/posts`, formData, {
+      headers: this.getHeaders(),
+    });
+  }
+
+  deletePost(postId: string) {
+    return this.http.delete(`${this.apiUrl}/posts/${postId}`, {
+      headers: this.getHeaders(),
+    });
+  }
+
+  addLike(postId: string) {
+    return this.http.post(
+      `${this.apiUrl}/posts/${postId}/likes`,
+      {},
+      { headers: this.getHeaders() },
+    );
+  }
+
+  removeLike(postId: string) {
+    return this.http.delete(`${this.apiUrl}/posts/${postId}/likes`, {
+      headers: this.getHeaders(),
+    });
+  }
+
+  // ── COMENTARIOS ───────────────────────────────────────────────────────────
+
+  // Trae los comentarios de una publicación paginados
+  // offset y limit permiten el botón "cargar más"
+  getComentarios(postId: string, offset = 0, limit = 10) {
+    return this.http.get(
+      `${this.apiUrl}/posts/${postId}/comentarios?offset=${offset}&limit=${limit}`,
+    );
+  }
+
+  // Agrega un comentario a una publicación
+  // Requiere token — el backend lo asocia al usuario logueado
+  createComentario(postId: string, mensaje: string) {
+    return this.http.post(
+      `${this.apiUrl}/posts/${postId}/comentarios`,
+      { mensaje },
+      { headers: this.getHeaders() },
+    );
+  }
+
+  // Edita el mensaje de un comentario propio
+  // El backend verifica que el usuario sea el autor antes de editar
+  updateComentario(comentarioId: string, mensaje: string) {
+    return this.http.put(
+      `${this.apiUrl}/comentarios/${comentarioId}`,
+      { mensaje },
+      { headers: this.getHeaders() },
+    );
+  }
+}
+===== ./src/app/services/auth.ts =====
+import { Injectable } from '@angular/core';
+
+@Injectable({
+  providedIn: 'root',
+})
+export class Auth {}
+===== ./src/app/services/session.service.ts =====
+// src/app/services/session.service.ts ← archivo nuevo
+
+import { inject, Injectable } from '@angular/core';
+import { Router } from '@angular/router';
+import { AuthService } from './auth.service';
+
+@Injectable({
+  providedIn: 'root',
+})
+export class SessionService {
+  private authService = inject(AuthService);
+  private router = inject(Router);
+
+  // Referencias a los timers para poder cancelarlos si es necesario
+  // (ej: cuando el usuario cierra sesión manualmente antes de que expiren)
+  private timerSesion: any = null;
+  private timerAviso: any = null;
+
+  // Función que el componente nos pasa para mostrar el modal de "¿Extender sesión?"
+  // Usamos un callback en lugar de manejar el modal acá para mantener
+  // la lógica de UI en el componente y la lógica de negocio en el servicio
+  private mostrarModalCallback: (() => void) | null = null;
+
+  // ── INICIAR SESIÓN ────────────────────────────────────────────────────────
+  // Se llama después de un login exitoso o después de refrescar el token
+  // Reinicia ambos timers desde cero
+  iniciarSesion(mostrarModal: () => void) {
+    // Guardamos el callback para usarlo cuando llegue el momento
+    this.mostrarModalCallback = mostrarModal;
+
+    // Cancelamos cualquier timer previo antes de crear nuevos
+    // Esto es importante al refrescar — evita tener dos timers corriendo a la vez
+    this.cancelarTimers();
+
+    // Timer de aviso: se dispara a los 5 minutos (300,000 ms)
+    // Quedan 5 minutos de sesión → mostramos el modal
+    this.timerAviso = setTimeout(
+      () => {
+        if (this.mostrarModalCallback) {
+          this.mostrarModalCallback();
+        }
+      },
+      5 * 60 * 1000,
+    );
+
+    // Timer de cierre: se dispara a los 10 minutos (600,000 ms)
+    // La sesión expiró → limpiamos y mandamos al login
+    this.timerSesion = setTimeout(
+      () => {
+        this.cerrarSesion();
+      },
+      10 * 60 * 1000,
+    );
+  }
+
+  // ── EXTENDER SESIÓN ───────────────────────────────────────────────────────
+  // Se llama cuando el usuario acepta extender la sesión en el modal
+  // Pide un token nuevo al backend y reinicia los timers
+  extenderSesion(cerrarModal: () => void) {
+    this.authService.refrescar().subscribe({
+      next: (res: any) => {
+        // Guardamos el token nuevo en localStorage
+        localStorage.setItem('token', res.token);
+
+        // Cerramos el modal de aviso
+        cerrarModal();
+
+        // Reiniciamos los timers con el mismo callback de modal
+        if (this.mostrarModalCallback) {
+          this.iniciarSesion(this.mostrarModalCallback);
+        }
+      },
+      error: () => {
+        // Si el backend devuelve 401 al refrescar, el token ya expiró
+        // El interceptor va a redirigir al login automáticamente
+        cerrarModal();
+      },
+    });
+  }
+
+  // ── CERRAR SESIÓN ─────────────────────────────────────────────────────────
+  // Limpia timers, localStorage y redirige al login
+  // Se puede llamar tanto desde el timer como desde el botón "Salir"
+  cerrarSesion() {
+    this.cancelarTimers();
+    localStorage.removeItem('token');
+    localStorage.removeItem('user');
+    this.router.navigate(['/login']);
+  }
+
+  // ── HELPER PRIVADO ────────────────────────────────────────────────────────
+  // Cancela ambos timers si están corriendo
+  // clearTimeout con un valor null o undefined no tira error, es seguro llamarlo siempre
+  private cancelarTimers() {
+    if (this.timerSesion) {
+      clearTimeout(this.timerSesion);
+      this.timerSesion = null;
+    }
+    if (this.timerAviso) {
+      clearTimeout(this.timerAviso);
+      this.timerAviso = null;
+    }
+  }
+  // Agregá este método en session.service.ts dentro de la clase SessionService
+
+  // Reinicia los timers usando el callback que ya fue registrado previamente por App
+  // Lo usa el Login para iniciar el timer sin necesitar acceso al modal de App
+  reiniciarConCallbackActual() {
+    if (this.mostrarModalCallback) {
+      this.iniciarSesion(this.mostrarModalCallback);
+    }
+  }
+}
+===== ./src/environments/environment.development.ts =====
+export const environment = {
+  production: false,
+  apiUrl: 'http://localhost:3000'
+};
+===== ./src/environments/environment.ts =====
+export const environment = {
+  production: true,
+  apiUrl: 'https://jorge-caballero-tp2-prog4-2026-c1-1.onrender.com'
+};
+===== ./src/index.html =====
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <title>RedSocial</title>
+  <base href="/">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <link rel="icon" type="image/x-icon" href="favicon.ico">
+</head>
+<body>
+  <app-root></app-root>
+</body>
+</html>
+===== ./src/main.ts =====
+import { bootstrapApplication } from '@angular/platform-browser';
+import { appConfig } from './app/app.config';
+import { App } from './app/app';
+
+bootstrapApplication(App, appConfig)
+  .catch((err) => console.error(err));

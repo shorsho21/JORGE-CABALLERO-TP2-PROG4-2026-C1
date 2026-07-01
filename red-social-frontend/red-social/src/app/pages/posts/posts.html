@@ -99,7 +99,7 @@
                 {{ post.autor.username }}
               </p>
               <p class="mb-0" style="color: #666; font-size: 0.78rem;">
-                {{ post.createdAt | date: 'dd MMM yyyy · HH:mm' }}
+                {{ post.createdAt | tiempoRelativo }}
               </p>
             </div>
           </div>
@@ -119,7 +119,7 @@
         <div class="px-4 py-2">
           <h6 class="text-white fw-semibold mb-1" style="font-size: 1rem;">{{ post.titulo }}</h6>
           <p style="color: #bbb; font-size: 0.9rem; line-height: 1.6; margin-bottom: 0;">
-            {{ post.descripcion }}
+            {{ post.descripcion | truncar: 200 }}
           </p>
         </div>
 

@@ -1,0 +1,33 @@
+/* src/app/pages/admin/admin.css */
+
+:host {
+  display: block;
+}
+
+.form-control {
+  transition: border-color 0.2s;
+}
+
+.form-control:focus {
+  background: #2a2a2a !important;
+  color: white;
+  box-shadow: none;
+  border-color: #555 !important;
+}
+
+.form-control::placeholder {
+  color: #555;
+}
+
+.rounded-4 {
+  transition: border-color 0.2s ease;
+}
+
+.btn {
+  transition: all 0.2s ease;
+}
+
+.btn:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}

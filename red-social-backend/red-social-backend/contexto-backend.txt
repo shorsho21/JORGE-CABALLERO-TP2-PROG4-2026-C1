@@ -1,0 +1,1755 @@
+===== ./dist/app.controller.d.ts =====
+import { AppService } from './app.service';
+export declare class AppController {
+    private readonly appService;
+    constructor(appService: AppService);
+    getHello(): string;
+}
+===== ./dist/app.module.d.ts =====
+export declare class AppModule {
+}
+===== ./dist/app.service.d.ts =====
+export declare class AppService {
+    getHello(): string;
+}
+===== ./dist/auth/auth.controller.d.ts =====
+import { AuthService } from './auth.service';
+export declare class AuthController {
+    private readonly authService;
+    constructor(authService: AuthService);
+    login(email: string, password: string): Promise<{
+        message: string;
+        token: string;
+        user: {
+            nombre: string;
+            apellido: string;
+            email: string;
+            username: string;
+            fechaNacimiento: Date;
+            descripcion: string;
+            imagenPerfil: string;
+            perfil: string;
+            _id: import("mongoose").Types.ObjectId;
+            __v: number;
+        };
+    }>;
+    autorizar(req: any): Promise<{
+        message: string;
+        user: import("mongoose").Document<unknown, {}, import("../users/schemas/user.schema").User, {}, import("mongoose").DefaultSchemaOptions> & import("../users/schemas/user.schema").User & {
+            _id: import("mongoose").Types.ObjectId;
+        } & {
+            __v: number;
+        } & {
+            id: string;
+        };
+    }>;
+    refrescar(req: any): Promise<{
+        message: string;
+        token: string;
+    }>;
+}
+===== ./dist/auth/auth.module.d.ts =====
+export declare class AuthModule {
+}
+===== ./dist/auth/auth.service.d.ts =====
+import { JwtService } from '@nestjs/jwt';
+import { Model } from 'mongoose';
+import { User } from '../users/schemas/user.schema';
+export declare class AuthService {
+    private userModel;
+    private jwtService;
+    constructor(userModel: Model<User>, jwtService: JwtService);
+    login(email: string, password: string): Promise<{
+        message: string;
+        token: string;
+        user: {
+            nombre: string;
+            apellido: string;
+            email: string;
+            username: string;
+            fechaNacimiento: Date;
+            descripcion: string;
+            imagenPerfil: string;
+            perfil: string;
+            _id: import("mongoose").Types.ObjectId;
+            __v: number;
+        };
+    }>;
+    autorizar(userFromToken: any): Promise<{
+        message: string;
+        user: import("mongoose").Document<unknown, {}, User, {}, import("mongoose").DefaultSchemaOptions> & User & {
+            _id: import("mongoose").Types.ObjectId;
+        } & {
+            __v: number;
+        } & {
+            id: string;
+        };
+    }>;
+    refrescar(userFromToken: any): Promise<{
+        message: string;
+        token: string;
+    }>;
+    private generarToken;
+}
+===== ./dist/auth/jwt.guard.d.ts =====
+declare const JwtAuthGuard_base: import("@nestjs/passport").Type<import("@nestjs/passport").IAuthGuard>;
+export declare class JwtAuthGuard extends JwtAuthGuard_base {
+}
+export {};
+===== ./dist/auth/jwt.strategy.d.ts =====
+import { Strategy } from 'passport-jwt';
+declare const JwtStrategy_base: new (...args: [opt: import("passport-jwt").StrategyOptionsWithRequest] | [opt: import("passport-jwt").StrategyOptionsWithoutRequest]) => Strategy & {
+    validate(...args: any[]): unknown;
+};
+export declare class JwtStrategy extends JwtStrategy_base {
+    constructor();
+    validate(payload: any): Promise<{
+        userId: any;
+        email: any;
+        perfil: any;
+    }>;
+}
+export {};
+===== ./dist/comments/comments.controller.d.ts =====
+import { CommentsService } from './comments.service';
+import { CreateCommentDto } from './dto/create-comment.dto';
+import { UpdateCommentDto } from './dto/update-comment.dto';
+export declare class CommentsController {
+    private readonly commentsService;
+    constructor(commentsService: CommentsService);
+    create(postId: string, dto: CreateCommentDto, req: any): Promise<(import("mongoose").Document<unknown, {}, import("./schemas/comment.schema").Comment, {}, import("mongoose").DefaultSchemaOptions> & import("./schemas/comment.schema").Comment & Required<{
+        _id: import("mongoose").Types.ObjectId;
+    }> & {
+        __v: number;
+    } & {
+        id: string;
+    }) | null>;
+    update(id: string, dto: UpdateCommentDto, req: any): Promise<(import("mongoose").Document<unknown, {}, import("./schemas/comment.schema").Comment, {}, import("mongoose").DefaultSchemaOptions> & import("./schemas/comment.schema").Comment & Required<{
+        _id: import("mongoose").Types.ObjectId;
+    }> & {
+        __v: number;
+    } & {
+        id: string;
+    }) | null>;
+    findByPost(postId: string, offset: string, limit: string): Promise<(import("mongoose").Document<unknown, {}, import("./schemas/comment.schema").Comment, {}, import("mongoose").DefaultSchemaOptions> & import("./schemas/comment.schema").Comment & Required<{
+        _id: import("mongoose").Types.ObjectId;
+    }> & {
+        __v: number;
+    } & {
+        id: string;
+    })[]>;
+}
+===== ./dist/comments/comments.module.d.ts =====
+export declare class CommentsModule {
+}
+===== ./dist/comments/comments.service.d.ts =====
+import { Model, Types } from 'mongoose';
+import { Comment } from './schemas/comment.schema';
+import { CreateCommentDto } from './dto/create-comment.dto';
+import { UpdateCommentDto } from './dto/update-comment.dto';
+export declare class CommentsService {
+    private commentModel;
+    constructor(commentModel: Model<Comment>);
+    create(publicacionId: string, autorId: string, dto: CreateCommentDto): Promise<(import("mongoose").Document<unknown, {}, Comment, {}, import("mongoose").DefaultSchemaOptions> & Comment & Required<{
+        _id: Types.ObjectId;
+    }> & {
+        __v: number;
+    } & {
+        id: string;
+    }) | null>;
+    update(comentarioId: string, autorId: string, dto: UpdateCommentDto): Promise<(import("mongoose").Document<unknown, {}, Comment, {}, import("mongoose").DefaultSchemaOptions> & Comment & Required<{
+        _id: Types.ObjectId;
+    }> & {
+        __v: number;
+    } & {
+        id: string;
+    }) | null>;
+    findByPost(publicacionId: string, offset?: number, limit?: number): Promise<(import("mongoose").Document<unknown, {}, Comment, {}, import("mongoose").DefaultSchemaOptions> & Comment & Required<{
+        _id: Types.ObjectId;
+    }> & {
+        __v: number;
+    } & {
+        id: string;
+    })[]>;
+}
+===== ./dist/comments/dto/create-comment.dto.d.ts =====
+export declare class CreateCommentDto {
+    mensaje: string;
+}
+===== ./dist/comments/dto/update-comment.dto.d.ts =====
+export declare class UpdateCommentDto {
+    mensaje: string;
+}
+===== ./dist/comments/schemas/comment.schema.d.ts =====
+import { Document, Types } from 'mongoose';
+export declare class Comment extends Document {
+    publicacionId: Types.ObjectId;
+    autorId: Types.ObjectId;
+    mensaje: string;
+    modificado: boolean;
+}
+export declare const CommentSchema: import("mongoose").Schema<Comment, import("mongoose").Model<Comment, any, any, any, any, any, Comment>, {}, {}, {}, {}, import("mongoose").DefaultSchemaOptions, Comment, Document<unknown, {}, Comment, {
+    id: string;
+}, import("mongoose").DefaultSchemaOptions> & Omit<Comment & Required<{
+    _id: Types.ObjectId;
+}> & {
+    __v: number;
+}, "id"> & {
+    id: string;
+}, {
+    _id?: import("mongoose").SchemaDefinitionProperty<Types.ObjectId, Comment, Document<unknown, {}, Comment, {
+        id: string;
+    }, import("mongoose").DefaultSchemaOptions> & Omit<Comment & Required<{
+        _id: Types.ObjectId;
+    }> & {
+        __v: number;
+    }, "id"> & {
+        id: string;
+    }> | undefined;
+    autorId?: import("mongoose").SchemaDefinitionProperty<Types.ObjectId, Comment, Document<unknown, {}, Comment, {
+        id: string;
+    }, import("mongoose").DefaultSchemaOptions> & Omit<Comment & Required<{
+        _id: Types.ObjectId;
+    }> & {
+        __v: number;
+    }, "id"> & {
+        id: string;
+    }> | undefined;
+    publicacionId?: import("mongoose").SchemaDefinitionProperty<Types.ObjectId, Comment, Document<unknown, {}, Comment, {
+        id: string;
+    }, import("mongoose").DefaultSchemaOptions> & Omit<Comment & Required<{
+        _id: Types.ObjectId;
+    }> & {
+        __v: number;
+    }, "id"> & {
+        id: string;
+    }> | undefined;
+    mensaje?: import("mongoose").SchemaDefinitionProperty<string, Comment, Document<unknown, {}, Comment, {
+        id: string;
+    }, import("mongoose").DefaultSchemaOptions> & Omit<Comment & Required<{
+        _id: Types.ObjectId;
+    }> & {
+        __v: number;
+    }, "id"> & {
+        id: string;
+    }> | undefined;
+    modificado?: import("mongoose").SchemaDefinitionProperty<boolean, Comment, Document<unknown, {}, Comment, {
+        id: string;
+    }, import("mongoose").DefaultSchemaOptions> & Omit<Comment & Required<{
+        _id: Types.ObjectId;
+    }> & {
+        __v: number;
+    }, "id"> & {
+        id: string;
+    }> | undefined;
+}, Comment>;
+===== ./dist/config/cloudinary.config.d.ts =====
+import { ConfigService } from '@nestjs/config';
+export declare const getCloudinaryConfig: (config: ConfigService) => {
+    cloud_name: any;
+    api_key: any;
+    api_secret: any;
+};
+===== ./dist/config/cloudinary.d.ts =====
+import { ConfigService } from '@nestjs/config';
+import { v2 as cloudinary } from 'cloudinary';
+export declare const CloudinaryProvider: {
+    provide: string;
+    inject: (typeof ConfigService)[];
+    useFactory: (config: ConfigService) => typeof cloudinary;
+};
+export { cloudinary };
+===== ./dist/config/cloudinary.provider.d.ts =====
+import { ConfigService } from '@nestjs/config';
+import { v2 as cloudinary } from 'cloudinary';
+export declare const CloudinaryProvider: {
+    provide: string;
+    inject: (typeof ConfigService)[];
+    useFactory: (config: ConfigService) => typeof cloudinary;
+};
+===== ./dist/main.d.ts =====
+export {};
+===== ./dist/posts/dto/create-post.dto.d.ts =====
+export declare class CreatePostDto {
+    titulo: string;
+    descripcion: string;
+    imagenUrl?: string;
+}
+===== ./dist/posts/posts.controller.d.ts =====
+import { PostsService } from './posts.service';
+import { CreatePostDto } from './dto/create-post.dto';
+export declare class PostsController {
+    private readonly postsService;
+    constructor(postsService: PostsService);
+    create(req: any, createPostDto: CreatePostDto, file: any): Promise<import("mongoose").Document<unknown, {}, import("./schemas/post.schema").Post, {}, import("mongoose").DefaultSchemaOptions> & import("./schemas/post.schema").Post & Required<{
+        _id: import("mongoose").Types.ObjectId;
+    }> & {
+        __v: number;
+    } & {
+        id: string;
+    }>;
+    findAll(offset: string, limit: string, orderBy: 'fecha' | 'likes', autorId: string): Promise<any[]>;
+    remove(postId: string, req: any): Promise<import("mongoose").Document<unknown, {}, import("./schemas/post.schema").Post, {}, import("mongoose").DefaultSchemaOptions> & import("./schemas/post.schema").Post & Required<{
+        _id: import("mongoose").Types.ObjectId;
+    }> & {
+        __v: number;
+    } & {
+        id: string;
+    }>;
+    addLike(postId: string, req: any): Promise<import("mongoose").Document<unknown, {}, import("./schemas/post.schema").Post, {}, import("mongoose").DefaultSchemaOptions> & import("./schemas/post.schema").Post & Required<{
+        _id: import("mongoose").Types.ObjectId;
+    }> & {
+        __v: number;
+    } & {
+        id: string;
+    }>;
+    removeLike(postId: string, req: any): Promise<import("mongoose").Document<unknown, {}, import("./schemas/post.schema").Post, {}, import("mongoose").DefaultSchemaOptions> & import("./schemas/post.schema").Post & Required<{
+        _id: import("mongoose").Types.ObjectId;
+    }> & {
+        __v: number;
+    } & {
+        id: string;
+    }>;
+    findOne(id: string): Promise<any>;
+}
+===== ./dist/posts/posts.module.d.ts =====
+export declare class PostsModule {
+}
+===== ./dist/posts/posts.service.d.ts =====
+import { Model, Types } from 'mongoose';
+import { Post } from './schemas/post.schema';
+import { CreatePostDto } from './dto/create-post.dto';
+export declare class PostsService {
+    private postModel;
+    private cloudinary;
+    constructor(postModel: Model<Post>, cloudinary: any);
+    create(createPostDto: CreatePostDto, autorId: string, file: any): Promise<import("mongoose").Document<unknown, {}, Post, {}, import("mongoose").DefaultSchemaOptions> & Post & Required<{
+        _id: Types.ObjectId;
+    }> & {
+        __v: number;
+    } & {
+        id: string;
+    }>;
+    findAll(offset?: number, limit?: number, orderBy?: 'fecha' | 'likes', autorId?: string): Promise<any[]>;
+    remove(postId: string, userId: string, perfil: string): Promise<import("mongoose").Document<unknown, {}, Post, {}, import("mongoose").DefaultSchemaOptions> & Post & Required<{
+        _id: Types.ObjectId;
+    }> & {
+        __v: number;
+    } & {
+        id: string;
+    }>;
+    addLike(postId: string, userId: string): Promise<import("mongoose").Document<unknown, {}, Post, {}, import("mongoose").DefaultSchemaOptions> & Post & Required<{
+        _id: Types.ObjectId;
+    }> & {
+        __v: number;
+    } & {
+        id: string;
+    }>;
+    removeLike(postId: string, userId: string): Promise<import("mongoose").Document<unknown, {}, Post, {}, import("mongoose").DefaultSchemaOptions> & Post & Required<{
+        _id: Types.ObjectId;
+    }> & {
+        __v: number;
+    } & {
+        id: string;
+    }>;
+    findOne(postId: string): Promise<any>;
+}
+===== ./dist/posts/schemas/post.schema.d.ts =====
+import { Document, Types } from 'mongoose';
+export declare class Post extends Document {
+    titulo: string;
+    descripcion: string;
+    imagenUrl: string;
+    autor: Types.ObjectId;
+    likes: Types.ObjectId[];
+    eliminado: boolean;
+}
+export declare const PostSchema: import("mongoose").Schema<Post, import("mongoose").Model<Post, any, any, any, any, any, Post>, {}, {}, {}, {}, import("mongoose").DefaultSchemaOptions, Post, Document<unknown, {}, Post, {
+    id: string;
+}, import("mongoose").DefaultSchemaOptions> & Omit<Post & Required<{
+    _id: Types.ObjectId;
+}> & {
+    __v: number;
+}, "id"> & {
+    id: string;
+}, {
+    _id?: import("mongoose").SchemaDefinitionProperty<Types.ObjectId, Post, Document<unknown, {}, Post, {
+        id: string;
+    }, import("mongoose").DefaultSchemaOptions> & Omit<Post & Required<{
+        _id: Types.ObjectId;
+    }> & {
+        __v: number;
+    }, "id"> & {
+        id: string;
+    }> | undefined;
+    descripcion?: import("mongoose").SchemaDefinitionProperty<string, Post, Document<unknown, {}, Post, {
+        id: string;
+    }, import("mongoose").DefaultSchemaOptions> & Omit<Post & Required<{
+        _id: Types.ObjectId;
+    }> & {
+        __v: number;
+    }, "id"> & {
+        id: string;
+    }> | undefined;
+    titulo?: import("mongoose").SchemaDefinitionProperty<string, Post, Document<unknown, {}, Post, {
+        id: string;
+    }, import("mongoose").DefaultSchemaOptions> & Omit<Post & Required<{
+        _id: Types.ObjectId;
+    }> & {
+        __v: number;
+    }, "id"> & {
+        id: string;
+    }> | undefined;
+    imagenUrl?: import("mongoose").SchemaDefinitionProperty<string, Post, Document<unknown, {}, Post, {
+        id: string;
+    }, import("mongoose").DefaultSchemaOptions> & Omit<Post & Required<{
+        _id: Types.ObjectId;
+    }> & {
+        __v: number;
+    }, "id"> & {
+        id: string;
+    }> | undefined;
+    autor?: import("mongoose").SchemaDefinitionProperty<Types.ObjectId, Post, Document<unknown, {}, Post, {
+        id: string;
+    }, import("mongoose").DefaultSchemaOptions> & Omit<Post & Required<{
+        _id: Types.ObjectId;
+    }> & {
+        __v: number;
+    }, "id"> & {
+        id: string;
+    }> | undefined;
+    likes?: import("mongoose").SchemaDefinitionProperty<Types.ObjectId[], Post, Document<unknown, {}, Post, {
+        id: string;
+    }, import("mongoose").DefaultSchemaOptions> & Omit<Post & Required<{
+        _id: Types.ObjectId;
+    }> & {
+        __v: number;
+    }, "id"> & {
+        id: string;
+    }> | undefined;
+    eliminado?: import("mongoose").SchemaDefinitionProperty<boolean, Post, Document<unknown, {}, Post, {
+        id: string;
+    }, import("mongoose").DefaultSchemaOptions> & Omit<Post & Required<{
+        _id: Types.ObjectId;
+    }> & {
+        __v: number;
+    }, "id"> & {
+        id: string;
+    }> | undefined;
+}, Post>;
+===== ./dist/users/dto/create-user.dto.d.ts =====
+export declare class CreateUserDto {
+    nombre: string;
+    apellido: string;
+    email: string;
+    username: string;
+    password: string;
+    fechaNacimiento: Date;
+    descripcion?: string;
+    imagenPerfil?: string;
+    perfil?: string;
+}
+===== ./dist/users/schemas/user.schema.d.ts =====
+export declare class User {
+    nombre: string;
+    apellido: string;
+    email: string;
+    username: string;
+    password: string;
+    fechaNacimiento: Date;
+    descripcion: string;
+    imagenPerfil: string;
+    perfil: string;
+}
+export declare const UserSchema: import("mongoose").Schema<User, import("mongoose").Model<User, any, any, any, any, any, User>, {}, {}, {}, {}, import("mongoose").DefaultSchemaOptions, User, import("mongoose").Document<unknown, {}, User, {
+    id: string;
+}, import("mongoose").DefaultSchemaOptions> & Omit<User & {
+    _id: import("mongoose").Types.ObjectId;
+} & {
+    __v: number;
+}, "id"> & {
+    id: string;
+}, {
+    nombre?: import("mongoose").SchemaDefinitionProperty<string, User, import("mongoose").Document<unknown, {}, User, {
+        id: string;
+    }, import("mongoose").DefaultSchemaOptions> & Omit<User & {
+        _id: import("mongoose").Types.ObjectId;
+    } & {
+        __v: number;
+    }, "id"> & {
+        id: string;
+    }> | undefined;
+    apellido?: import("mongoose").SchemaDefinitionProperty<string, User, import("mongoose").Document<unknown, {}, User, {
+        id: string;
+    }, import("mongoose").DefaultSchemaOptions> & Omit<User & {
+        _id: import("mongoose").Types.ObjectId;
+    } & {
+        __v: number;
+    }, "id"> & {
+        id: string;
+    }> | undefined;
+    email?: import("mongoose").SchemaDefinitionProperty<string, User, import("mongoose").Document<unknown, {}, User, {
+        id: string;
+    }, import("mongoose").DefaultSchemaOptions> & Omit<User & {
+        _id: import("mongoose").Types.ObjectId;
+    } & {
+        __v: number;
+    }, "id"> & {
+        id: string;
+    }> | undefined;
+    username?: import("mongoose").SchemaDefinitionProperty<string, User, import("mongoose").Document<unknown, {}, User, {
+        id: string;
+    }, import("mongoose").DefaultSchemaOptions> & Omit<User & {
+        _id: import("mongoose").Types.ObjectId;
+    } & {
+        __v: number;
+    }, "id"> & {
+        id: string;
+    }> | undefined;
+    password?: import("mongoose").SchemaDefinitionProperty<string, User, import("mongoose").Document<unknown, {}, User, {
+        id: string;
+    }, import("mongoose").DefaultSchemaOptions> & Omit<User & {
+        _id: import("mongoose").Types.ObjectId;
+    } & {
+        __v: number;
+    }, "id"> & {
+        id: string;
+    }> | undefined;
+    fechaNacimiento?: import("mongoose").SchemaDefinitionProperty<Date, User, import("mongoose").Document<unknown, {}, User, {
+        id: string;
+    }, import("mongoose").DefaultSchemaOptions> & Omit<User & {
+        _id: import("mongoose").Types.ObjectId;
+    } & {
+        __v: number;
+    }, "id"> & {
+        id: string;
+    }> | undefined;
+    descripcion?: import("mongoose").SchemaDefinitionProperty<string, User, import("mongoose").Document<unknown, {}, User, {
+        id: string;
+    }, import("mongoose").DefaultSchemaOptions> & Omit<User & {
+        _id: import("mongoose").Types.ObjectId;
+    } & {
+        __v: number;
+    }, "id"> & {
+        id: string;
+    }> | undefined;
+    imagenPerfil?: import("mongoose").SchemaDefinitionProperty<string, User, import("mongoose").Document<unknown, {}, User, {
+        id: string;
+    }, import("mongoose").DefaultSchemaOptions> & Omit<User & {
+        _id: import("mongoose").Types.ObjectId;
+    } & {
+        __v: number;
+    }, "id"> & {
+        id: string;
+    }> | undefined;
+    perfil?: import("mongoose").SchemaDefinitionProperty<string, User, import("mongoose").Document<unknown, {}, User, {
+        id: string;
+    }, import("mongoose").DefaultSchemaOptions> & Omit<User & {
+        _id: import("mongoose").Types.ObjectId;
+    } & {
+        __v: number;
+    }, "id"> & {
+        id: string;
+    }> | undefined;
+}, User>;
+===== ./dist/users/users.controller.d.ts =====
+import { UsersService } from './users.service';
+import { CreateUserDto } from './dto/create-user.dto';
+export declare class UsersController {
+    private readonly usersService;
+    constructor(usersService: UsersService);
+    create(createUserDto: CreateUserDto, file: Express.Multer.File): Promise<import("mongoose").Document<unknown, {}, import("./schemas/user.schema").User, {}, import("mongoose").DefaultSchemaOptions> & import("./schemas/user.schema").User & {
+        _id: import("mongoose").Types.ObjectId;
+    } & {
+        __v: number;
+    } & {
+        id: string;
+    }>;
+    findAll(): Promise<(import("mongoose").Document<unknown, {}, import("./schemas/user.schema").User, {}, import("mongoose").DefaultSchemaOptions> & import("./schemas/user.schema").User & {
+        _id: import("mongoose").Types.ObjectId;
+    } & {
+        __v: number;
+    } & {
+        id: string;
+    })[]>;
+    updateRol(id: string, perfil: string): Promise<import("mongoose").Document<unknown, {}, import("./schemas/user.schema").User, {}, import("mongoose").DefaultSchemaOptions> & import("./schemas/user.schema").User & {
+        _id: import("mongoose").Types.ObjectId;
+    } & {
+        __v: number;
+    } & {
+        id: string;
+    }>;
+}
+===== ./dist/users/users.module.d.ts =====
+export declare class UsersModule {
+}
+===== ./dist/users/users.service.d.ts =====
+import { Model } from 'mongoose';
+import { User } from './schemas/user.schema';
+import { CreateUserDto } from './dto/create-user.dto';
+export declare class UsersService {
+    private userModel;
+    private cloudinary;
+    constructor(userModel: Model<User>, cloudinary: any);
+    create(createUserDto: CreateUserDto, file: Express.Multer.File): Promise<import("mongoose").Document<unknown, {}, User, {}, import("mongoose").DefaultSchemaOptions> & User & {
+        _id: import("mongoose").Types.ObjectId;
+    } & {
+        __v: number;
+    } & {
+        id: string;
+    }>;
+    findAll(): Promise<(import("mongoose").Document<unknown, {}, User, {}, import("mongoose").DefaultSchemaOptions> & User & {
+        _id: import("mongoose").Types.ObjectId;
+    } & {
+        __v: number;
+    } & {
+        id: string;
+    })[]>;
+    updateRol(id: string, perfil: string): Promise<import("mongoose").Document<unknown, {}, User, {}, import("mongoose").DefaultSchemaOptions> & User & {
+        _id: import("mongoose").Types.ObjectId;
+    } & {
+        __v: number;
+    } & {
+        id: string;
+    }>;
+}
+===== ./src/app.controller.ts =====
+import { Controller, Get } from '@nestjs/common';
+import { AppService } from './app.service';
+
+@Controller()
+export class AppController {
+  constructor(private readonly appService: AppService) {}
+
+  @Get()
+  getHello(): string {
+    return this.appService.getHello();
+  }
+}
+===== ./src/app.module.ts =====
+import { Module } from '@nestjs/common';
+import { ConfigModule } from '@nestjs/config';
+import { MongooseModule } from '@nestjs/mongoose';
+
+import { UsersModule } from './users/users.module';
+import { AuthModule } from './auth/auth.module';
+import { PostsModule } from './posts/posts.module';
+import { CommentsModule } from './comments/comments.module';
+@Module({
+  imports: [
+    //hace que las variable de entorno del .env esten disponibles en la app
+    ConfigModule.forRoot({
+      isGlobal: true,
+    }),
+    //conecta a la base de datos de mongo usando la variable de entorno mongo_url
+    MongooseModule.forRoot(process.env.MONGO_URL!),
+
+    UsersModule,
+    AuthModule,
+    PostsModule,
+    CommentsModule,
+  ],
+})
+export class AppModule {}
+===== ./src/app.service.ts =====
+import { Injectable } from '@nestjs/common';
+
+@Injectable()
+export class AppService {
+  getHello(): string {
+    return 'Hello World!';
+  }
+}
+===== ./src/auth/auth.controller.ts =====
+// src/auth/auth.controller.ts ← ya existe, reemplazás el contenido
+
+import { Body, Controller, Post, UseGuards, Request } from '@nestjs/common';
+import { AuthService } from './auth.service';
+import { JwtAuthGuard } from './jwt.guard';
+
+@Controller('auth')
+export class AuthController {
+  constructor(private readonly authService: AuthService) {}
+
+  // ── POST /auth/login ──────────────────────────────────────────────────────
+  // Endpoint público — no requiere token
+  // Recibe email (o username) y password, devuelve token + datos del usuario
+  @Post('login')
+  login(
+    @Body('email') email: string,
+    @Body('password') password: string,
+  ) {
+    return this.authService.login(email, password);
+  }
+
+  // ── POST /auth/autorizar ──────────────────────────────────────────────────
+  // Requiere token JWT válido en el header: Authorization: Bearer <token>
+  // El JwtAuthGuard valida el token ANTES de ejecutar el método
+  // Si el token es inválido o expiró → el guard devuelve 401 automáticamente
+  // Si es válido → req.user contiene los datos del payload (seteados por JwtStrategy)
+  @Post('autorizar')
+  @UseGuards(JwtAuthGuard)
+  autorizar(@Request() req: any) {
+    // Le pasamos los datos del usuario que vienen del token al servicio
+    // para que busque el usuario fresco en la base de datos
+    return this.authService.autorizar(req.user);
+  }
+
+  // ── POST /auth/refrescar ──────────────────────────────────────────────────
+  // Requiere token JWT válido — si expiró, el guard devuelve 401
+  // Si es válido → genera un token nuevo con los mismos datos y 15 min más
+  // El frontend debe llamar a este endpoint antes de que el token expire
+  // (en nuestro caso, a los 10 minutos — cuando quedan 5 minutos)
+  @Post('refrescar')
+  @UseGuards(JwtAuthGuard)
+  refrescar(@Request() req: any) {
+    return this.authService.refrescar(req.user);
+  }
+}
+===== ./src/auth/auth.module.ts =====
+// src/auth/auth.module.ts ← ya existe, reemplazás el contenido
+
+import { Module } from '@nestjs/common';
+import { MongooseModule } from '@nestjs/mongoose';
+import { JwtModule } from '@nestjs/jwt';
+import { PassportModule } from '@nestjs/passport';
+import { ConfigService } from '@nestjs/config';
+import { AuthService } from './auth.service';
+import { AuthController } from './auth.controller';
+import { JwtStrategy } from './jwt.strategy';
+import { User, UserSchema } from '../users/schemas/user.schema';
+
+@Module({
+  imports: [
+    MongooseModule.forFeature([{ name: User.name, schema: UserSchema }]),
+    PassportModule,
+    JwtModule.registerAsync({
+      useFactory: (configService: ConfigService) => ({
+        secret: configService.get<string>('JWT_SECRET'),
+        signOptions: {
+          // ⚠️ Cambiamos de '7d' a '15m' según el requerimiento del sprint
+          // Esto hace que el token expire a los 15 minutos de ser emitido
+          expiresIn: '15m',
+        },
+      }),
+      inject: [ConfigService],
+    }),
+  ],
+  controllers: [AuthController],
+  providers: [AuthService, JwtStrategy],
+})
+export class AuthModule {}
+===== ./src/auth/auth.service.ts =====
+// src/auth/auth.service.ts ← ya existe, reemplazás el contenido
+
+import { Injectable, UnauthorizedException } from '@nestjs/common';
+import { InjectModel } from '@nestjs/mongoose';
+import { JwtService } from '@nestjs/jwt';
+import { Model } from 'mongoose';
+import * as bcrypt from 'bcrypt';
+import { User } from '../users/schemas/user.schema';
+
+@Injectable()
+export class AuthService {
+  constructor(
+    @InjectModel(User.name)
+    private userModel: Model<User>,
+    private jwtService: JwtService,
+  ) {}
+
+  // ── LOGIN ─────────────────────────────────────────────────────────────────
+  // Valida email/username y password, devuelve token + datos del usuario
+  async login(email: string, password: string) {
+    // Buscamos por email o username para que el usuario pueda usar cualquiera de los dos
+    const user = await this.userModel.findOne({
+      $or: [{ email }, { username: email }],
+    });
+
+    if (!user) {
+      throw new UnauthorizedException('Usuario no encontrado');
+    }
+
+    // Comparamos la password ingresada contra el hash guardado en la base de datos
+    const isPasswordValid = await bcrypt.compare(password, user.password);
+
+    if (!isPasswordValid) {
+      throw new UnauthorizedException('Contraseña incorrecta');
+    }
+
+    // Generamos el token con el payload actualizado
+    // Este payload es lo que va a estar disponible en req.user en los controllers
+    const token = this.generarToken(user);
+
+    // Devolvemos el usuario sin la password por seguridad
+    const { password: _, ...userWithoutPassword } = user.toObject();
+
+    return {
+      message: 'Login exitoso',
+      token,
+      user: userWithoutPassword,
+    };
+  }
+
+  // ── AUTORIZAR ─────────────────────────────────────────────────────────────
+  // Valida que el token sea correcto y devuelve los datos del usuario
+  // Este método lo llama el controller después de que el JwtAuthGuard ya validó el token
+  // Si el token es inválido, el guard tira 401 antes de llegar acá
+  async autorizar(userFromToken: any) {
+    // userFromToken viene del JwtStrategy.validate() — ya tiene los datos del payload
+    // Buscamos el usuario en la base de datos para devolver datos frescos
+    const user = await this.userModel.findById(userFromToken.userId).select('-password');
+
+    if (!user) {
+      throw new UnauthorizedException('Usuario no encontrado');
+    }
+
+    return {
+      message: 'Token válido',
+      user,
+    };
+  }
+
+  // ── REFRESCAR ─────────────────────────────────────────────────────────────
+  // Recibe un token válido y devuelve uno nuevo con el mismo payload y 15 min más
+  // El guard ya validó que el token sea correcto antes de llegar acá
+  async refrescar(userFromToken: any) {
+    // Buscamos el usuario para tener los datos actualizados en el nuevo token
+    const user = await this.userModel.findById(userFromToken.userId);
+
+    if (!user) {
+      throw new UnauthorizedException('Usuario no encontrado');
+    }
+
+    // Generamos un token nuevo con los mismos datos — el vencimiento se renueva automáticamente
+    const token = this.generarToken(user);
+
+    return {
+      message: 'Token renovado',
+      token,
+    };
+  }
+
+  // ── HELPER PRIVADO ────────────────────────────────────────────────────────
+  // Centraliza la generación del token para no repetir el payload en cada método
+  // Si en el futuro hay que agregar algo al payload, se cambia en un solo lugar
+  private generarToken(user: any): string {
+    const payload = {
+      sub: user._id,           // id único del usuario (estándar JWT usar "sub" para esto)
+      email: user.email,
+      username: user.username,  // 👈 agregamos username al payload
+      perfil: user.perfil,      // rol: 'usuario' o 'administrador'
+    };
+
+    return this.jwtService.sign(payload);
+  }
+}
+===== ./src/auth/jwt.guard.ts =====
+import { Injectable } from '@nestjs/common';
+import { AuthGuard } from '@nestjs/passport';
+//protege los endpoints que requieren autenticacion si el token es invalido
+@Injectable()
+export class JwtAuthGuard extends AuthGuard('jwt') {}
+===== ./src/auth/jwt.strategy.ts =====
+import { Injectable } from '@nestjs/common';
+import { PassportStrategy } from '@nestjs/passport';
+import { ExtractJwt, Strategy } from 'passport-jwt';
+import * as dotenv from 'dotenv';
+
+dotenv.config();
+
+@Injectable()
+export class JwtStrategy extends PassportStrategy(Strategy) {
+  constructor() {
+    //extrae el token del header y lo valida
+    super({
+      jwtFromRequest: ExtractJwt.fromAuthHeaderAsBearerToken(),
+      ignoreExpiration: false,
+      secretOrKey: process.env.JWT_SECRET!,
+    });
+  }
+
+  //duelve el userId, email y perfil del usuario
+  async validate(payload: any) {
+    return {
+      userId: payload.sub,
+      email: payload.email,
+      perfil: payload.perfil,
+    };
+  }
+}
+===== ./src/comments/comments.controller.ts =====
+import {
+  Controller,
+  Post,
+  Put,
+  Get,
+  Body,
+  Param,
+  Query,
+  UseGuards,
+  Request,
+} from '@nestjs/common';
+import { CommentsService } from './comments.service';
+import { CreateCommentDto } from './dto/create-comment.dto';
+import { UpdateCommentDto } from './dto/update-comment.dto';
+import { JwtAuthGuard } from '../auth/jwt.guard';
+
+// Todos los endpoints de comentarios viven bajo /posts/:postId/comentarios
+// excepto el de editar, que vive bajo /comentarios/:id
+@Controller()
+export class CommentsController {
+  constructor(private readonly commentsService: CommentsService) {}
+
+  // ── POST /posts/:postId/comentarios ───────────────────────────────────────
+  // Agrega un comentario a una publicación específica
+  // Requiere token JWT — solo usuarios logueados pueden comentar
+  @Post('posts/:postId/comentarios')
+  @UseGuards(JwtAuthGuard)
+  create(
+    @Param('postId') postId: string,       // id de la publicación desde la URL
+    @Body() dto: CreateCommentDto,          // mensaje validado por el DTO
+    @Request() req: any,                    // req.user viene del JwtStrategy después de validar el token
+  ) {
+    // req.user.userId lo setea el JwtStrategy en el método validate()
+    return this.commentsService.create(postId, req.user.userId, dto);
+  }
+
+  // ── PUT /comentarios/:id ──────────────────────────────────────────────────
+  // Edita el mensaje de un comentario propio
+  // Requiere token JWT — el servicio verifica que sea el autor
+  @Put('comentarios/:id')
+  @UseGuards(JwtAuthGuard)
+  update(
+    @Param('id') id: string,               // id del comentario a editar
+    @Body() dto: UpdateCommentDto,          // nuevo mensaje validado por el DTO
+    @Request() req: any,
+  ) {
+    return this.commentsService.update(id, req.user.userId, dto);
+  }
+
+  // ── GET /posts/:postId/comentarios ────────────────────────────────────────
+  // Trae los comentarios de una publicación, paginados
+  // No requiere token — cualquiera puede leer comentarios
+  @Get('posts/:postId/comentarios')
+  findByPost(
+    @Param('postId') postId: string,
+    // Query params opcionales para paginación: /posts/123/comentarios?offset=0&limit=10
+    @Query('offset') offset: string,
+    @Query('limit') limit: string,
+  ) {
+    // parseInt convierte el string de la query a número
+    // El || pone valores por defecto si no se envían los params
+    return this.commentsService.findByPost(
+      postId,
+      parseInt(offset) || 0,
+      parseInt(limit) || 10,
+    );
+  }
+}
+===== ./src/comments/comments.module.ts =====
+import { Module } from '@nestjs/common';
+import { MongooseModule } from '@nestjs/mongoose';
+import { CommentsController } from './comments.controller';
+import { CommentsService } from './comments.service';
+import { Comment, CommentSchema } from './schemas/comment.schema';
+
+@Module({
+  imports: [
+    // Registramos el schema de Comment para que Mongoose sepa que existe
+    // y pueda inyectarlo con @InjectModel(Comment.name) en el servicio
+    MongooseModule.forFeature([{ name: Comment.name, schema: CommentSchema }]),
+  ],
+  controllers: [CommentsController], // expone los endpoints HTTP
+  providers: [CommentsService],      // registra el servicio para que pueda inyectarse
+})
+export class CommentsModule {}
+===== ./src/comments/comments.service.ts =====
+import {
+  Injectable,
+  NotFoundException,
+  ForbiddenException,
+} from '@nestjs/common';
+import { InjectModel } from '@nestjs/mongoose';
+import { Model, Types } from 'mongoose';
+import { Comment } from './schemas/comment.schema';
+import { CreateCommentDto } from './dto/create-comment.dto';
+import { UpdateCommentDto } from './dto/update-comment.dto';
+
+@Injectable()
+export class CommentsService {
+  constructor(
+    // Inyectamos el modelo de Mongoose para poder hacer operaciones en la colección "comments"
+    @InjectModel(Comment.name)
+    private commentModel: Model<Comment>,
+  ) {}
+
+  // ── CREAR COMENTARIO ──────────────────────────────────────────────────────
+  // Recibe el id de la publicación, el id del usuario logueado y el DTO con el mensaje
+  async create(publicacionId: string, autorId: string, dto: CreateCommentDto) {
+    const nuevoComentario = new this.commentModel({
+      publicacionId: new Types.ObjectId(publicacionId),
+      autorId: new Types.ObjectId(autorId),
+      mensaje: dto.mensaje,
+    });
+
+    await nuevoComentario.save();
+
+    // Hacemos populate después de guardar para devolver el autor completo
+    // así el frontend no necesita pedir nada extra ni usa una imagen random de fallback
+    return this.commentModel
+      .findById(nuevoComentario._id)
+      .populate('autorId', 'nombre apellido username imagenPerfil')
+      .exec();
+  }
+
+  // ── EDITAR COMENTARIO ─────────────────────────────────────────────────────
+  // Solo el autor del comentario puede editarlo
+  async update(comentarioId: string, autorId: string, dto: UpdateCommentDto) {
+    const comentario = await this.commentModel.findById(comentarioId);
+
+    if (!comentario) {
+      throw new NotFoundException('Comentario no encontrado');
+    }
+
+    if (comentario.autorId.toString() !== autorId) {
+      throw new ForbiddenException('No podés editar un comentario ajeno');
+    }
+
+    comentario.mensaje = dto.mensaje;
+    comentario.modificado = true;
+    await comentario.save();
+
+    // Igual que en create, populamos antes de devolver
+    return this.commentModel
+      .findById(comentario._id)
+      .populate('autorId', 'nombre apellido username imagenPerfil')
+      .exec();
+  }
+
+  // ── LISTAR COMENTARIOS DE UNA PUBLICACIÓN ────────────────────────────────
+  // Devuelve los comentarios paginados, ordenados del más reciente al más antiguo
+  // offset: desde qué comentario empezar (para paginación)
+  // limit: cuántos traer por vez (por defecto 10)
+  async findByPost(publicacionId: string, offset = 0, limit = 10) {
+    return (
+      this.commentModel
+        .find({
+          // Filtramos por publicación
+          publicacionId: new Types.ObjectId(publicacionId),
+        })
+        // Ordenamos por fecha de creación descendente (más nuevo primero)
+        .sort({ createdAt: -1 })
+        // Saltamos los primeros "offset" resultados (para el botón "cargar más")
+        .skip(offset)
+        // Traemos solo "limit" resultados
+        .limit(limit)
+        // Populate trae los datos del usuario autor en lugar de solo el id
+        .populate('autorId', 'nombre apellido username imagenPerfil')
+        .exec()
+    );
+  }
+}
+===== ./src/comments/dto/create-comment.dto.ts =====
+import { IsString, MinLength } from 'class-validator';
+
+export class CreateCommentDto {
+  // El mensaje es obligatorio y debe tener al menos 1 caracter
+  // MinLength(1) evita que se envíen comentarios vacíos o solo con espacios
+  @IsString()
+  @MinLength(1)
+  mensaje!: string;
+}
+===== ./src/comments/dto/update-comment.dto.ts =====
+import { IsString, MinLength } from 'class-validator';
+
+export class UpdateCommentDto {
+  // Solo se puede editar el mensaje, nada más
+  // El campo "modificado" lo maneja el servicio automáticamente
+  @IsString()
+  @MinLength(1)
+  mensaje!: string;
+}
+===== ./src/comments/schemas/comment.schema.ts =====
+import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
+import { Document, Types } from 'mongoose';
+
+// timestamps: true agrega automáticamente createdAt y updatedAt a cada documento
+@Schema({ timestamps: true })
+export class Comment extends Document {
+  // ID de la publicación a la que pertenece este comentario
+  @Prop({ type: Types.ObjectId, ref: 'Post', required: true })
+  publicacionId!: Types.ObjectId;
+
+  // ID del usuario que escribió el comentario
+  @Prop({ type: Types.ObjectId, ref: 'User', required: true })
+  autorId!: Types.ObjectId;
+
+  // Texto del comentario
+  @Prop({ required: true })
+  mensaje!: string;
+
+  // Indica si el comentario fue editado después de crearse
+  // Por defecto es false; se cambia a true cuando el usuario edita
+  @Prop({ default: false })
+  modificado!: boolean;
+}
+
+// Esto convierte la clase en un schema real de Mongoose que Mongo puede usar
+export const CommentSchema = SchemaFactory.createForClass(Comment);
+
+===== ./src/config/cloudinary.config.ts =====
+import { ConfigService } from '@nestjs/config';
+
+export const getCloudinaryConfig = (config: ConfigService) => ({
+  cloud_name: config.get('CLOUDINARY_CLOUD_NAME'),
+  api_key: config.get('CLOUDINARY_API_KEY'),
+  api_secret: config.get('CLOUDINARY_API_SECRET'),
+});
+===== ./src/config/cloudinary.provider.ts =====
+import { ConfigService } from '@nestjs/config';
+import { v2 as cloudinary } from 'cloudinary';
+
+export const CloudinaryProvider = {
+  provide: 'CLOUDINARY',
+  inject: [ConfigService],
+  useFactory: (config: ConfigService) => {
+    //obtengo la variables de entorno de cloudinary del .env y usando el config service de nestjs
+    const cloudName = config.get<string>('CLOUDINARY_CLOUD_NAME');
+    const apiKey = config.get<string>('CLOUDINARY_API_KEY');
+    const apiSecret = config.get<string>('CLOUDINARY_API_SECRET');
+
+    console.log('CLOUDINARY INIT:', {
+      cloudName,
+      apiKey,
+      apiSecret: apiSecret ? 'OK' : 'MISSING',
+    });
+
+    // validación simple
+    if (!cloudName || !apiKey || !apiSecret) {
+      throw new Error('Cloudinary env variables missing');
+    }
+
+    cloudinary.config({
+      cloud_name: cloudName,
+      api_key: apiKey,
+      api_secret: apiSecret,
+    });
+
+    return cloudinary;
+  },
+};
+===== ./src/config/cloudinary.ts =====
+import { ConfigService } from '@nestjs/config';
+import { v2 as cloudinary } from 'cloudinary';
+
+export const CloudinaryProvider = {
+  provide: 'CLOUDINARY',
+  inject: [ConfigService],
+  useFactory: (config: ConfigService) => {
+    const cloudName = config.get<string>('CLOUDINARY_CLOUD_NAME');
+    const apiKey = config.get<string>('CLOUDINARY_API_KEY');
+    const apiSecret = config.get<string>('CLOUDINARY_API_SECRET');
+
+    console.log('CLOUDINARY CHECK:', {
+      cloudName,
+      apiKey,
+      apiSecret,
+    });
+
+    cloudinary.config({
+      cloud_name: cloudName,
+      api_key: apiKey,
+      api_secret: apiSecret,
+    });
+
+    return cloudinary;
+  },
+};
+export { cloudinary };
+===== ./src/main.ts =====
+import { NestFactory } from '@nestjs/core';
+import { AppModule } from './app.module';
+
+async function bootstrap() {
+  const app = await NestFactory.create(AppModule);
+
+  app.enableCors({
+    origin: [
+      'http://localhost:4200',
+      'https://jorge-caballero-tp-2-prog-4-2026-c1-ten.vercel.app',
+      'https://jorge-caballero-tp-2-prog-4-2026-c1-qvas-avzn6t8c9.vercel.app',
+    ],
+    credentials: true,
+  });
+
+  await app.listen(process.env.PORT ?? 3000);
+}
+bootstrap();
+===== ./src/posts/dto/create-post.dto.ts =====
+import { IsString, IsOptional } from 'class-validator';
+
+export class CreatePostDto {
+  @IsString()
+  titulo: string;
+
+  @IsString()
+  descripcion: string;
+  //la publicacion puede o no tener imagen
+  @IsOptional()
+  @IsString()
+  imagenUrl?: string;
+}
+===== ./src/posts/posts.controller.ts =====
+import {
+  Controller,
+  Post,
+  Delete,
+  Get,
+  Body,
+  Param,
+  Query,
+  UploadedFile,
+  UseInterceptors,
+  UseGuards,
+  Request,
+} from '@nestjs/common';
+import { FileInterceptor } from '@nestjs/platform-express';
+import { JwtAuthGuard } from '../auth/jwt.guard';
+import { PostsService } from './posts.service';
+import { CreatePostDto } from './dto/create-post.dto';
+
+@Controller('posts')
+export class PostsController {
+  constructor(private readonly postsService: PostsService) {}
+
+  // CREAR PUBLICACIÓN
+  @Post()
+  @UseGuards(JwtAuthGuard)
+  @UseInterceptors(FileInterceptor('file'))
+  create(
+    @Request() req: any,
+    @Body() createPostDto: CreatePostDto,
+    @UploadedFile() file: any,
+  ) {
+    return this.postsService.create(createPostDto, req.user.userId, file);
+  }
+
+  // LISTAR PUBLICACIONES
+  @Get()
+  findAll(
+    @Query('offset') offset: string,
+    @Query('limit') limit: string,
+    @Query('orderBy') orderBy: 'fecha' | 'likes',
+    @Query('autorId') autorId: string,
+  ) {
+    return this.postsService.findAll(
+      parseInt(offset) || 0,
+      parseInt(limit) || 10,
+      orderBy || 'fecha',
+      autorId,
+    );
+  }
+  //tienen guard para que solo puedan dar like o eliminar los que estan logueados y eliminar solo los que son autor del post
+  // BAJA LÓGICA
+  @Delete(':id')
+  @UseGuards(JwtAuthGuard)
+  remove(@Param('id') postId: string, @Request() req: any) {
+    return this.postsService.remove(postId, req.user.userId, req.user.perfil);
+  }
+
+  // DAR LIKE
+  @Post(':id/likes')
+  @UseGuards(JwtAuthGuard)
+  addLike(@Param('id') postId: string, @Request() req: any) {
+    return this.postsService.addLike(postId, req.user.userId);
+  }
+
+  // QUITAR LIKE
+  @Delete(':id/likes')
+  @UseGuards(JwtAuthGuard)
+  removeLike(@Param('id') postId: string, @Request() req: any) {
+    return this.postsService.removeLike(postId, req.user.userId);
+  }
+
+  // TRAER PUBLICACIÓN POR ID
+  // Ruta pública — no requiere token
+  // La usa la página de detalle para mostrar la publicación completa
+  @Get(':id')
+  findOne(@Param('id') id: string) {
+    return this.postsService.findOne(id);
+  }
+}
+===== ./src/posts/posts.module.ts =====
+import { Module } from '@nestjs/common';
+import { MongooseModule } from '@nestjs/mongoose';
+import { PostsController } from './posts.controller';
+import { PostsService } from './posts.service';
+import { Post, PostSchema } from './schemas/post.schema';
+import { CloudinaryProvider } from '../config/cloudinary.provider';
+
+@Module({
+  imports: [
+    MongooseModule.forFeature([{ name: Post.name, schema: PostSchema }]),
+  ],
+  controllers: [PostsController],
+  providers: [PostsService, CloudinaryProvider],
+})
+export class PostsModule {}
+===== ./src/posts/posts.service.ts =====
+import {
+  Injectable,
+  NotFoundException,
+  ForbiddenException,
+  BadRequestException,
+  Inject,
+} from '@nestjs/common';
+import { InjectModel } from '@nestjs/mongoose';
+import { Model, Types } from 'mongoose';
+import { Post } from './schemas/post.schema';
+import { CreatePostDto } from './dto/create-post.dto';
+
+@Injectable()
+export class PostsService {
+  constructor(
+    @InjectModel(Post.name)
+    private postModel: Model<Post>,
+    @Inject('CLOUDINARY')
+    private cloudinary: any,
+  ) {}
+
+  // CREAR PUBLICACIÓN
+  async create(createPostDto: CreatePostDto, autorId: string, file: any) {
+    let imageUrl = '';
+    //si existe un archivo lo subo a cloudinary y obtengo la url
+    if (file) {
+      const result = await this.cloudinary.uploader.upload(
+        `data:${file.mimetype};base64,${file.buffer.toString('base64')}`,
+        { folder: 'red-social/posts' },
+      );
+      imageUrl = result.secure_url;
+    }
+
+    const newPost = new this.postModel({
+      ...createPostDto,
+      autor: new Types.ObjectId(autorId),
+      imagenUrl: imageUrl,
+    });
+
+    return newPost.save();
+  }
+
+  // LISTAR PUBLICACIONES
+  async findAll(
+    offset = 0,
+    limit = 10,
+    orderBy: 'fecha' | 'likes' = 'fecha',
+    autorId?: string,
+  ) {
+    const filter: any = { eliminado: false };
+
+    if (autorId) {
+      filter.autor = new Types.ObjectId(autorId);
+    }
+
+    const sortOption: Record<string, 1 | -1> =
+      orderBy === 'likes' ? { likesCount: -1 } : { createdAt: -1 };
+
+    return this.postModel
+      .aggregate([
+        { $match: filter },
+        { $addFields: { likesCount: { $size: '$likes' } } },
+        { $sort: sortOption },
+        { $skip: offset },
+        { $limit: limit },
+        {
+          $lookup: {
+            from: 'users',
+            localField: 'autor',
+            foreignField: '_id',
+            as: 'autor',
+          },
+        },
+        { $unwind: '$autor' },
+        {
+          $project: {
+            'autor.password': 0,
+          },
+        },
+      ])
+      .exec();
+  }
+
+  // BAJA LÓGICA
+  async remove(postId: string, userId: string, perfil: string) {
+    const post = await this.postModel.findById(postId);
+
+    if (!post) {
+      throw new NotFoundException('Publicación no encontrada');
+    }
+
+    const esAutor = post.autor.toString() === userId;
+    const esAdmin = perfil === 'administrador';
+
+    if (!esAutor && !esAdmin) {
+      throw new ForbiddenException(
+        'No tenés permiso para eliminar esta publicación',
+      );
+    }
+
+    post.eliminado = true;
+    return post.save();
+  }
+
+  // DAR LIKE
+  async addLike(postId: string, userId: string) {
+    const post = await this.postModel.findById(postId);
+
+    if (!post) {
+      throw new NotFoundException('Publicación no encontrada');
+    }
+
+    const yaLiked = post.likes.some((id) => id.toString() === userId);
+
+    if (yaLiked) {
+      throw new BadRequestException('Ya le diste me gusta a esta publicación');
+    }
+
+    post.likes.push(new Types.ObjectId(userId));
+    return post.save();
+  }
+
+  // QUITAR LIKE
+  async removeLike(postId: string, userId: string) {
+    const post = await this.postModel.findById(postId);
+
+    if (!post) {
+      throw new NotFoundException('Publicación no encontrada');
+    }
+
+    const yaLiked = post.likes.some((id) => id.toString() === userId);
+
+    if (!yaLiked) {
+      throw new BadRequestException(
+        'No le habías dado me gusta a esta publicación',
+      );
+    }
+
+    post.likes = post.likes.filter((id) => id.toString() !== userId) as any;
+    return post.save();
+  }
+
+  // TRAER PUBLICACIÓN POR ID
+  async findOne(postId: string) {
+    const posts = await this.postModel
+      .aggregate([
+        // Filtramos por id y que no esté eliminada
+        { $match: { _id: new Types.ObjectId(postId), eliminado: false } },
+        // Hacemos populate manual con aggregate para traer los datos del autor
+        {
+          $lookup: {
+            from: 'users',
+            localField: 'autor',
+            foreignField: '_id',
+            as: 'autor',
+          },
+        },
+        { $unwind: '$autor' },
+        // Excluimos la password del autor por seguridad
+        { $project: { 'autor.password': 0 } },
+      ])
+      .exec();
+
+    if (!posts.length) {
+      throw new NotFoundException('Publicación no encontrada');
+    }
+
+    // aggregate siempre devuelve un array — tomamos el primer elemento
+    return posts[0];
+  }
+}
+===== ./src/posts/schemas/post.schema.ts =====
+import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
+import { Document, Types } from 'mongoose';
+//timestamps, agrega created at y update at automaticamente
+@Schema({ timestamps: true })
+export class Post extends Document {
+  @Prop({ required: true })
+  titulo: string;
+
+  @Prop({ required: true })
+  descripcion: string;
+
+  @Prop({ default: '' })
+  imagenUrl: string;
+
+  @Prop({ type: Types.ObjectId, ref: 'User', required: true })
+  autor: Types.ObjectId;
+  //array de ids de usuarios que le dieron like a la publicacion, para contar y evitar repetidos
+  @Prop({ type: [{ type: Types.ObjectId, ref: 'User' }], default: [] })
+  likes: Types.ObjectId[];
+
+  @Prop({ default: false })
+  eliminado: boolean;
+}
+
+export const PostSchema = SchemaFactory.createForClass(Post);
+===== ./src/users/dto/create-user.dto.ts =====
+import {
+  IsDateString,
+  IsEmail,
+  IsIn,
+  IsOptional,
+  IsString,
+  MinLength,
+} from 'class-validator';
+
+export class CreateUserDto {
+  @IsString()
+  nombre!: string;
+
+  @IsString()
+  apellido!: string;
+
+  @IsEmail()
+  email!: string;
+
+  @IsString()
+  username!: string;
+
+  @MinLength(6)
+  password!: string;
+
+  @IsDateString()
+  fechaNacimiento!: Date;
+
+  @IsOptional()
+  @IsString()
+  descripcion?: string;
+
+  @IsOptional()
+  @IsString()
+  imagenPerfil?: string;
+
+  @IsOptional()
+  @IsIn(['usuario', 'administrador'])
+  perfil?: string;
+}
+===== ./src/users/schemas/user.schema.ts =====
+import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
+
+@Schema({ timestamps: true })
+export class User {
+  @Prop({ required: true })
+  nombre!: string;
+
+  @Prop({ required: true })
+  apellido!: string;
+
+  @Prop({ required: true, unique: true })
+  email!: string;
+
+  @Prop({ required: true, unique: true })
+  username!: string;
+
+  @Prop({ required: true })
+  password!: string;
+
+  @Prop({ required: true })
+  fechaNacimiento!: Date;
+
+  @Prop()
+  descripcion!: string;
+
+  @Prop()
+  imagenPerfil!: string;
+
+  @Prop({
+    default: 'usuario',
+    enum: ['usuario', 'administrador'],
+  })
+  perfil!: string;
+}
+
+export const UserSchema = SchemaFactory.createForClass(User);
+===== ./src/users/users.controller.ts =====
+import {
+  Body,
+  Controller,
+  Post,
+  Get,
+  Patch,
+  Param,
+  UploadedFile,
+  UseInterceptors,
+  UseGuards,
+} from '@nestjs/common';
+import { FileInterceptor } from '@nestjs/platform-express';
+import { JwtAuthGuard } from '../auth/jwt.guard';
+import { UsersService } from './users.service';
+import { CreateUserDto } from './dto/create-user.dto';
+
+@Controller('users')
+export class UsersController {
+  constructor(private readonly usersService: UsersService) {}
+
+  // POST — crear usuario
+  @Post()
+  @UseInterceptors(FileInterceptor('file'))
+  create(
+    @Body() createUserDto: CreateUserDto,
+    @UploadedFile() file: Express.Multer.File,
+  ) {
+    return this.usersService.create(createUserDto, file);
+  }
+  //nuevos enpoints para sprint 2, listar usuarios y actualizar rol, solo para admin
+  // GET — listar todos los usuarios (solo admin para el panel admin)
+  @Get()
+  @UseGuards(JwtAuthGuard)
+  findAll() {
+    return this.usersService.findAll();
+  }
+
+  // PATCH — actualizar rol (solo admin, par actualizar el rol del usuario en panel admin)
+  @Patch(':id/rol')
+  @UseGuards(JwtAuthGuard)
+  updateRol(
+    @Param('id') id: string,
+    @Body('perfil') perfil: string,
+  ) {
+    return this.usersService.updateRol(id, perfil);
+  }
+}
+===== ./src/users/users.module.ts =====
+import { Module } from '@nestjs/common';
+import { MongooseModule } from '@nestjs/mongoose';
+
+import { UsersController } from './users.controller';
+import { UsersService } from './users.service';
+import { User, UserSchema } from './schemas/user.schema';
+import { CloudinaryProvider } from 'src/config/cloudinary.provider';
+
+@Module({
+  imports: [
+    MongooseModule.forFeature([
+      {
+        name: User.name,
+        schema: UserSchema,
+      },
+    ]),
+  ],
+  controllers: [UsersController],
+  providers: [UsersService, CloudinaryProvider],
+})
+export class UsersModule {}
+===== ./src/users/users.service.ts =====
+import { Injectable, Inject, ConflictException, NotFoundException } from '@nestjs/common';
+import { InjectModel } from '@nestjs/mongoose';
+import { Model } from 'mongoose';
+import * as bcrypt from 'bcrypt';
+
+import { User } from './schemas/user.schema';
+import { CreateUserDto } from './dto/create-user.dto';
+
+@Injectable()
+export class UsersService {
+  constructor(
+    @InjectModel(User.name)
+    private userModel: Model<User>,
+
+    // Cloudinary provider
+    @Inject('CLOUDINARY')
+    private cloudinary: any,
+  ) {}
+
+  //creacion de usuario, con dto, imagen y hash de pass.
+  async create(createUserDto: CreateUserDto, file: Express.Multer.File) {
+    let imageUrl = '';
+
+    //  VALIDAR DUPLICADOS
+    const existingUser = await this.userModel.findOne({
+      $or: [
+        { email: createUserDto.email },
+        { username: createUserDto.username },
+      ],
+    });
+
+    if (existingUser) {
+      throw new ConflictException(
+        'Ya existe un usuario con ese email o username',
+      );
+    }
+
+    // 📸 SUBIR IMAGEN
+    //si el archivo existe, lo sube a cloudinary y obtiene la URL de la imagen
+    if (file) {
+      const result = await this.cloudinary.uploader.upload(
+        `data:${file.mimetype};base64,${file.buffer.toString('base64')}`,
+        {
+          folder: 'red-social',
+        },
+      );
+
+      imageUrl = result.secure_url;
+    }
+
+    //  HASH PASSWORD, hace un hash de la contrase;a usando bcrypt
+    const hashedPassword = await bcrypt.hash(createUserDto.password, 10);
+
+    //  CREAR USUARIO, usa el schema de mongoose para crear un nuevo usuario con los datos del DTO
+    const newUser = new this.userModel({
+      ...createUserDto,
+      password: hashedPassword,
+      imagenPerfil: imageUrl,
+    });
+
+    return newUser.save();
+  }
+
+  //metodos nuevos sprint 2, para lista rlos usuarios y actualizar el rol usando en la vista admin
+  // 📋 LISTAR USUARIOS
+  async findAll() {
+    return this.userModel.find({}, { password: 0 });
+  }
+
+  // ✏️ ACTUALIZAR ROL
+  async updateRol(id: string, perfil: string) {
+    const user = await this.userModel.findById(id);
+
+    if (!user) {
+      throw new NotFoundException('Usuario no encontrado');
+    }
+
+    user.perfil = perfil;
+    return user.save();
+  }
+}
+===== ./test/app.e2e-spec.ts =====
+import { Test, TestingModule } from '@nestjs/testing';
+import { INestApplication } from '@nestjs/common';
+import request from 'supertest';
+import { App } from 'supertest/types';
+import { AppModule } from './../src/app.module';
+
+describe('AppController (e2e)', () => {
+  let app: INestApplication<App>;
+
+  beforeEach(async () => {
+    const moduleFixture: TestingModule = await Test.createTestingModule({
+      imports: [AppModule],
+    }).compile();
+
+    app = moduleFixture.createNestApplication();
+    await app.init();
+  });
+
+  it('/ (GET)', () => {
+    return request(app.getHttpServer())
+      .get('/')
+      .expect(200)
+      .expect('Hello World!');
+  });
+
+  afterEach(async () => {
+    await app.close();
+  });
+});

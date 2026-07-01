@@ -31,7 +31,7 @@
               {{ post.autor?.username }}
             </p>
             <p class="mb-0" style="color: #666; font-size: 0.78rem">
-              {{ post.createdAt | date: 'dd MMM yyyy · HH:mm' }}
+              {{ post.createdAt | tiempoRelativo }}
             </p>
           </div>
         </div>
@@ -109,7 +109,7 @@
                   {{ comentario.autorId?.username }}
                 </span>
                 <span class="ms-2" style="color: #555; font-size: 0.75rem">
-                  {{ comentario.createdAt | date: 'dd/MM/yyyy HH:mm' }}
+                  {{ comentario.createdAt | tiempoRelativo }}
                 </span>
                 @if (comentario.modificado) {
                   <span class="ms-1 fst-italic" style="color: #555; font-size: 0.75rem"

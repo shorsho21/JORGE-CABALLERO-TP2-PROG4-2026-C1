@@ -1,14 +1,15 @@
 import { Component, inject, OnInit, ChangeDetectorRef } from '@angular/core';
 import { RouterLink } from '@angular/router';
 import { FormsModule } from '@angular/forms';
-import { DatePipe } from '@angular/common';
+// import { DatePipe } from '@angular/common';
 import { AuthService } from '../../services/auth.service';
 import { Navbar } from '../../components/navbar/navbar';
-
+import { TiempoRelativoPipe } from '../../pipes/tiempo-relativo.pipe';
+import { TruncarPipe } from '../../pipes/truncar.pipe';
 @Component({
   selector: 'app-posts',
   standalone: true,
-  imports: [RouterLink, FormsModule, DatePipe, Navbar],
+  imports: [RouterLink, FormsModule, Navbar, TiempoRelativoPipe, TruncarPipe],
   templateUrl: './posts.html',
   styleUrl: './posts.css',
 })

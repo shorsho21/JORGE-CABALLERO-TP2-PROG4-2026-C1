@@ -9,8 +9,6 @@ export class AuthService {
   private http = inject(HttpClient);
   private apiUrl = environment.apiUrl;
 
-  // Construye el header de autorización con el token guardado en localStorage
-  // Se reutiliza en todos los endpoints que requieren estar logueado
   private getHeaders() {
     const token = localStorage.getItem('token');
     return new HttpHeaders({
@@ -20,27 +18,27 @@ export class AuthService {
 
   // ── AUTH ──────────────────────────────────────────────────────────────────
 
-  // Inicia sesión con email o username + password
-  // Devuelve token y datos del usuario
   login(identifier: string, password: string) {
-    return this.http.post(`${this.apiUrl}/auth/login`, { email: identifier, password });
+    return this.http.post(`${this.apiUrl}/auth/login`, {
+      email: identifier,
+      password,
+    });
   }
 
-  // Valida el token actual contra el backend
-  // Si el token es válido devuelve los datos frescos del usuario
-  // Si no es válido el interceptor captura el 401 y redirige al login
   autorizar() {
-    return this.http.post(`${this.apiUrl}/auth/autorizar`, {}, {
-      headers: this.getHeaders(),
-    });
+    return this.http.post(
+      `${this.apiUrl}/auth/autorizar`,
+      {},
+      { headers: this.getHeaders() },
+    );
   }
 
-  // Solicita un token nuevo con los mismos datos y 15 minutos más de vida
-  // Se llama cuando quedan 5 minutos de sesión y el usuario acepta extender
   refrescar() {
-    return this.http.post(`${this.apiUrl}/auth/refrescar`, {}, {
-      headers: this.getHeaders(),
-    });
+    return this.http.post(
+      `${this.apiUrl}/auth/refrescar`,
+      {},
+      { headers: this.getHeaders() },
+    );
   }
 
   // ── USUARIOS ──────────────────────────────────────────────────────────────
@@ -55,10 +53,32 @@ export class AuthService {
     });
   }
 
+  // Crea un usuario desde el dashboard de admin
+  // Mismo endpoint que register pero con perfil elegible (usuario/administrador)
+  createUser(formData: FormData) {
+    return this.http.post(`${this.apiUrl}/users`, formData, );
+  }
+
   updateRol(userId: string, perfil: string) {
     return this.http.patch(
       `${this.apiUrl}/users/${userId}/rol`,
       { perfil },
+      { headers: this.getHeaders() },
+    );
+  }
+
+  // Baja lógica — el usuario queda en la DB pero no puede ingresar
+  deshabilitarUsuario(userId: string) {
+    return this.http.delete(`${this.apiUrl}/users/${userId}`, {
+      headers: this.getHeaders(),
+    });
+  }
+
+  // Alta lógica — rehabilita un usuario previamente deshabilitado
+  rehabilitarUsuario(userId: string) {
+    return this.http.post(
+      `${this.apiUrl}/users/${userId}/rehabilitar`,
+      {},
       { headers: this.getHeaders() },
     );
   }
@@ -71,8 +91,6 @@ export class AuthService {
     return this.http.get(url);
   }
 
-  // Trae una publicación específica por su id
-  // La usamos en la página de detalle
   getPostById(postId: string) {
     return this.http.get(`${this.apiUrl}/posts/${postId}`);
   }
@@ -105,16 +123,12 @@ export class AuthService {
 
   // ── COMENTARIOS ───────────────────────────────────────────────────────────
 
-  // Trae los comentarios de una publicación paginados
-  // offset y limit permiten el botón "cargar más"
   getComentarios(postId: string, offset = 0, limit = 10) {
     return this.http.get(
       `${this.apiUrl}/posts/${postId}/comentarios?offset=${offset}&limit=${limit}`,
     );
   }
 
-  // Agrega un comentario a una publicación
-  // Requiere token — el backend lo asocia al usuario logueado
   createComentario(postId: string, mensaje: string) {
     return this.http.post(
       `${this.apiUrl}/posts/${postId}/comentarios`,
@@ -123,12 +137,35 @@ export class AuthService {
     );
   }
 
-  // Edita el mensaje de un comentario propio
-  // El backend verifica que el usuario sea el autor antes de editar
   updateComentario(comentarioId: string, mensaje: string) {
     return this.http.put(
       `${this.apiUrl}/comentarios/${comentarioId}`,
       { mensaje },
+      { headers: this.getHeaders() },
+    );
+  }
+
+  // ── ESTADÍSTICAS ──────────────────────────────────────────────────────────
+  // Todos los endpoints de stats requieren token de admin
+  // El backend lo verifica con JwtAuthGuard + RolesGuard
+
+  getPublicacionesPorUsuario(desde: string, hasta: string) {
+    return this.http.get(
+      `${this.apiUrl}/stats/publicaciones-por-usuario?desde=${desde}&hasta=${hasta}`,
+      { headers: this.getHeaders() },
+    );
+  }
+
+  getComentariosPorTiempo(desde: string, hasta: string) {
+    return this.http.get(
+      `${this.apiUrl}/stats/comentarios-por-tiempo?desde=${desde}&hasta=${hasta}`,
+      { headers: this.getHeaders() },
+    );
+  }
+
+  getComentariosPorPublicacion(desde: string, hasta: string) {
+    return this.http.get(
+      `${this.apiUrl}/stats/comentarios-por-publicacion?desde=${desde}&hasta=${hasta}`,
       { headers: this.getHeaders() },
     );
   }

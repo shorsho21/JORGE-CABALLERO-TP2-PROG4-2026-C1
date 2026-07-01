@@ -31,6 +31,12 @@ export class User {
     enum: ['usuario', 'administrador'],
   })
   perfil!: string;
+
+  // Controla si el usuario puede ingresar a la aplicación
+  // Por defecto true — cuando un admin lo deshabilita pasa a false
+  // Un usuario deshabilitado recibe un 403 al intentar hacer login
+  @Prop({ default: true })
+  habilitado!: boolean;
 }
 
 export const UserSchema = SchemaFactory.createForClass(User);

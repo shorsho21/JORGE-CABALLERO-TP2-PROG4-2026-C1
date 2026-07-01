@@ -3,10 +3,12 @@ import { Component, inject, OnInit, ChangeDetectorRef } from '@angular/core';
 import { DatePipe } from '@angular/common';
 import { AuthService } from '../../services/auth.service';
 import { Navbar } from '../../components/navbar/navbar';
+import { TiempoRelativoPipe } from '../../pipes/tiempo-relativo.pipe';
+import { TruncarPipe } from '../../pipes/truncar.pipe';
 @Component({
   selector: 'app-profile',
   standalone: true,
-  imports: [ DatePipe, Navbar],
+  imports: [ DatePipe, Navbar, TiempoRelativoPipe, TruncarPipe],
   templateUrl: './profile.html',
   styleUrl: './profile.css',
 })
